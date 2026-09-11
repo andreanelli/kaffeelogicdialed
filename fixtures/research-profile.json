@@ -1,0 +1,16 @@
+{
+  "format": "dialed-profile",
+  "formatVersion": 1,
+  "profile": {
+    "name": "Research / gentle filter",
+    "description": "Illustrative Dialed curve. Not a Kaffelogic-native or hardware-validated profile.",
+    "level": 2.1,
+    "changeNote": "Initial research curve",
+    "points": [
+      { "time": 0, "temperature": 25, "fan": 15000 },
+      { "time": 120, "temperature": 140, "fan": 14500 },
+      { "time": 300, "temperature": 190, "fan": 14000 },
+      { "time": 540, "temperature": 220, "fan": 13000 }
+    ]
+  }
+}
