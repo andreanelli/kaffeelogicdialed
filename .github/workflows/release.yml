@@ -1,0 +1,78 @@
+name: Checks and versioned deployment
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Check release version
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
+        run: node scripts/release-version.js
+      - run: npm test
+      - run: npm run build
+
+  deploy:
+    needs: checks
+    if: github.event_name == 'push' && needs.checks.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: dialed-production
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: https://dialed-roast-lab.pages.dev
+    env:
+      CLOUDFLARE_ACCOUNT_ID: d0646b06dcd64d54c9ffe9b7e2eb5189
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      VITE_DIALED_MODE: cloud
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Require deployment configuration
+        shell: bash
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'Missing CLOUDFLARE_API_TOKEN repository secret'; exit 1; }
+          test -n "$VITE_SUPABASE_URL" || { echo 'Missing VITE_SUPABASE_URL repository variable'; exit 1; }
+          test -n "$VITE_SUPABASE_ANON_KEY" || { echo 'Missing VITE_SUPABASE_ANON_KEY repository variable'; exit 1; }
+      - run: npm ci
+      - run: npm run build:cloud
+      - name: Prevent an old workflow from replacing a newer main commit
+        shell: bash
+        run: |
+          latest=$(git ls-remote origin refs/heads/main | cut -f1)
+          test "$latest" = "$GITHUB_SHA" || { echo 'main has advanced. Bump the version on current main to release it.'; exit 1; }
+      - name: Deploy production
+        run: npx --no-install wrangler pages deploy dist --project-name dialed-roast-lab --branch main --commit-hash "$GITHUB_SHA"
+      - name: Record release
+        env:
+          RELEASE_VERSION: ${{ needs.checks.outputs.version }}
+        run: |
+          echo "Deployed Dialed $RELEASE_VERSION from commit $GITHUB_SHA to https://dialed-roast-lab.pages.dev/" >> "$GITHUB_STEP_SUMMARY"
