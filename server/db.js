@@ -59,5 +59,37 @@ export function openDb(path) {
       return row ? JSON.parse(row.value) : null;
     },
   };
+  Object.assign(store, {
+    initImports() {
+      db.exec(
+        "CREATE TABLE IF NOT EXISTS import_keys (key TEXT PRIMARY KEY, entity_id TEXT NOT NULL, fingerprint TEXT NOT NULL, batch_id TEXT NOT NULL)",
+      );
+    },
+    allEntities: () =>
+      db
+        .prepare("SELECT id,kind,data,created_at FROM entities ORDER BY rowid")
+        .all(),
+    allFiles: () => db.prepare("SELECT * FROM files ORDER BY rowid").all(),
+    file: (id) => db.prepare("SELECT * FROM files WHERE id=?").get(id),
+    fileByHash: (hash) =>
+      db.prepare("SELECT * FROM files WHERE sha256=?").get(hash),
+    addFile: (f) =>
+      db
+        .prepare("INSERT INTO files VALUES (?,?,?,?,?)")
+        .run(f.id, f.name, f.sha256, f.content, f.created_at),
+    remove: (id) => db.prepare("DELETE FROM entities WHERE id=?").run(id),
+    removeFile: (id) => db.prepare("DELETE FROM files WHERE id=?").run(id),
+    importKey: (key) =>
+      db.prepare("SELECT * FROM import_keys WHERE key=?").get(key),
+    addImportKey: (key, id, hash, batch) =>
+      db
+        .prepare("INSERT INTO import_keys VALUES (?,?,?,?)")
+        .run(key, id, hash, batch),
+    removeImportKeys: (field, value) => {
+      if (!["entity_id", "batch_id"].includes(field))
+        throw new Error("Invalid key field");
+      db.prepare(`DELETE FROM import_keys WHERE ${field}=?`).run(value);
+    },
+  });
   return store;
 }

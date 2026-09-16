@@ -1,3 +1,4 @@
+import { catalogRuns } from "./run-history.js";
 import { z } from "zod";
 import { parseNative, patchNative, CODEC_VERSION } from "./codecs/native.js";
 import {
@@ -14,6 +15,7 @@ import {
 } from "./imports.js";
 export function registerImportRoutes(app, s) {
   initImports(s);
+  app.post("/api/imports/catalog-runs", (_, res) => res.json(catalogRuns(s)));
   app.get("/api/files/:id/inspect", (req, res) => {
     const file = getFile(s, req.params.id);
     res.json(parseNative(file.content, file.name));

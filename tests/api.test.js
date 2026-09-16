@@ -429,3 +429,181 @@ test("editing a historical roast does not debit present stock", async (t) => {
   assert.equal((await request("/state")).data.beans[0].stock, 1000);
   assert.equal(s.get(historic.id, "roast").inventoryConsumed, false);
 });
+
+test("unknown coffee stock stays unknown when logging and editing a roast", async (t) => {
+  const { request } = await setup(t);
+  const p = await prerequisites(request);
+  await request(`/beans/${p.bean.id}`, { ...p.bean, stock: null }, "PUT");
+  const r = await request("/roasts", roast(p.bean, p.version));
+  assert.equal(r.status, 201);
+  assert.equal(r.data.inventoryConsumed, false);
+  await request(`/roasts/${r.data.id}`, { ...r.data, greenWeight: 110 }, "PUT");
+  assert.equal((await request("/state")).data.beans[0].stock, null);
+});
+
+test("cupping accepts recorded runs and deletion blocks dependent tastings", async (t) => {
+  const { s, request } = await setup(t);
+  const run = s.put("deviceRun", {
+    name: "Historical run",
+    files: [],
+    category: "recorded",
+  });
+  const cup = await request("/cuppings", {
+    roastId: run.id,
+    taster: "Tester",
+    tastedAt: new Date().toISOString(),
+    score: 85,
+    aroma: 8,
+    acidity: 8,
+    sweetness: 8,
+    body: 8,
+    finish: 8,
+    notes: "Recorded without invented weights",
+  });
+  assert.equal(cup.status, 201);
+  assert.equal(
+    (await request(`/records/deviceRun/${run.id}`, undefined, "DELETE")).status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/cupping/${cup.data.id}`, undefined, "DELETE"))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await request(`/records/deviceRun/${run.id}`, undefined, "DELETE")).status,
+    200,
+  );
+  assert.ok(s.meta("deletedDeviceRuns").includes(run.id));
+  assert.equal(
+    (await request("/cuppings", { ...cup.data, roastId: "missing" })).status,
+    404,
+  );
+});
+test("deleting a roast restores inventory once and protects linked records", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const r = (await request("/roasts", roast(p.bean, p.version))).data;
+  assert.equal(
+    (await request(`/records/bean/${p.bean.id}`, undefined, "DELETE")).status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/profile/${p.profile.id}`, undefined, "DELETE"))
+      .status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/roast/${r.id}`, undefined, "DELETE")).status,
+    200,
+  );
+  assert.equal(s.get(p.bean.id, "bean").stock, 1000);
+  assert.equal(
+    (await request(`/records/roast/${r.id}`, undefined, "DELETE")).status,
+    404,
+  );
+  assert.equal(s.get(p.bean.id, "bean").stock, 1000);
+  assert.equal(
+    (await request(`/records/version/${p.version.id}`, undefined, "DELETE"))
+      .status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/profile/${p.profile.id}`, undefined, "DELETE"))
+      .status,
+    200,
+  );
+  assert.equal(s.list("version").length, 0);
+  assert.equal(
+    (await request(`/records/bean/${p.bean.id}`, undefined, "DELETE")).status,
+    200,
+  );
+});
+test("deletion preserves historical stock and enforces experiment and file dependencies", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const experiment = s.put("experiment", { name: "History" });
+  const file = archiveFile(s, "original.klog", Buffer.from("original"));
+  const r = s.put("roast", {
+    ...roast(p.bean, p.version),
+    experimentId: experiment.id,
+    fileId: file.id,
+    inventoryConsumed: false,
+  });
+  assert.equal(
+    (await request(`/records/experiment/${experiment.id}`, undefined, "DELETE"))
+      .status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/file/${file.id}`, undefined, "DELETE")).status,
+    409,
+  );
+  await request(`/records/roast/${r.id}`, undefined, "DELETE");
+  assert.equal(s.get(p.bean.id, "bean").stock, 1000);
+  assert.equal(
+    (await request(`/records/experiment/${experiment.id}`, undefined, "DELETE"))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await request(`/records/file/${file.id}`, undefined, "DELETE")).status,
+    200,
+  );
+});
+
+test("manual roast creates one editable run; late log attachment merges catalog entry without duplicating stock or tastings", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const created = await request("/roasts", roast(p.bean, p.version));
+  assert.equal(created.status, 201);
+  const originalRun = s.list("deviceRun")[0];
+  assert.equal(originalRun.roastId, created.data.id);
+  assert.equal(originalRun.sourceFileId, null);
+  const bytes = Buffer.from(
+    "profile_schema_version:1.6\nprofile_short_name:Fixture\nrecommended_level:2.1\nroast_profile:0,20,0,0,100,100,600,220,500,200,0,0\nfan_profile:0,15000,0,0,100,15000,600,14000,500,14000,0,0\nnative_schema_version:1.8\nroast_date:06/09/2026 15:00:00 UTC\ntime\t#=temp\n0\t25\n200\t180\n!roast_end:220\n",
+  );
+  const file = archiveFile(s, "late.klog", bytes);
+  await request("/imports/catalog-runs", {});
+  const nativeRun = s.list("deviceRun").find((r) => r.id !== originalRun.id);
+  const cup = s.put("cupping", { roastId: nativeRun.id, taster: "QA" });
+  const updated = await request(
+    "/roasts/" + created.data.id,
+    { ...created.data, fileId: file.id, notes: "Added after roasting" },
+    "PUT",
+  );
+  assert.equal(updated.status, 200);
+  assert.equal(s.list("deviceRun").length, 1);
+  assert.equal(s.list("deviceRun")[0].id, originalRun.id);
+  assert.equal(s.list("deviceRun")[0].sourceFileId, file.id);
+  assert.equal(s.get(cup.id, "cupping").roastId, created.data.id);
+  assert.equal(s.get(p.bean.id, "bean").stock, 900);
+  await request("/imports/catalog-runs", {});
+  assert.equal(s.list("deviceRun").length, 1);
+  const duplicate = await request("/roasts", {
+    ...roast(p.bean, p.version),
+    fileId: file.id,
+  });
+  assert.equal(duplicate.status, 409);
+  assert.equal(s.get(p.bean.id, "bean").stock, 900);
+  s.remove(cup.id);
+  assert.equal(
+    (await request("/records/roast/" + created.data.id, undefined, "DELETE"))
+      .status,
+    200,
+  );
+  assert.equal(s.list("deviceRun").length, 0);
+  assert.equal(s.get(p.bean.id, "bean").stock, 1000);
+  assert.deepEqual(Buffer.from(s.file(file.id).content), bytes);
+});
+test("existing manual roasts appear in run history without changing inventory", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const r = s.put("roast", roast(p.bean, p.version));
+  const state = (await request("/state")).data;
+  assert.equal(
+    state.deviceRuns.find((run) => run.roastId === r.id).sourceFileId,
+    null,
+  );
+  assert.equal(s.get(p.bean.id, "bean").stock, 1000);
+});

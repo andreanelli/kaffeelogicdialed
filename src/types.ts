@@ -5,7 +5,7 @@ export type Bean = Base & {
   origin: string;
   process: string;
   variety: string;
-  stock: number;
+  stock: number | null;
   notes: string;
 };
 export type Profile = Base & { name: string; description: string };
@@ -68,7 +68,19 @@ export type ArchiveFile = {
   size: number;
   createdAt: string;
 };
+export type DeviceRun = Base & {
+  roastId?: string;
+  name: string;
+  roastedAt: string | null;
+  duration: number | null;
+  level: number | null;
+  firstCrack: number | null;
+  category: "recorded" | "short" | "incomplete";
+  sourceFileId: string | null;
+  files: { id: string; name: string; sha256: string }[];
+};
 export type State = {
+  deviceRuns: DeviceRun[];
   beans: Bean[];
   profiles: Profile[];
   versions: Version[];

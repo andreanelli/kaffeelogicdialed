@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { Point } from "./types";
 export const clock = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")}`;
+  `${Math.floor(Math.round(seconds) / 60)}:${String(Math.round(seconds) % 60).padStart(2, "0")}`;
 export function Chart({
   points,
   comparison,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
-import { api } from "./api";
+import { api, upload } from "./api";
 import { Chart } from "./Chart";
 import type { Bean, Experiment, Roast, State, Version, Point } from "./types";
 export type Editor =
@@ -45,6 +45,10 @@ export function EditorDialog({
   const ref = useRef<HTMLDialogElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [attachment, setAttachment] = useState(
+    editor.type === "roast" ? editor.item?.fileId || "" : "",
+  );
+  const [newFiles, setNewFiles] = useState<{ id: string; name: string }[]>([]);
   const initial = editor.type === "profile" ? editor.item?.points : undefined;
   const [points, setPoints] = useState<Point[]>(
     initial || [
@@ -77,7 +81,7 @@ export function EditorDialog({
             origin: s("origin"),
             process: s("process"),
             variety: s("variety"),
-            stock: n("stock"),
+            stock: String(f.get("stock") ?? "").trim() ? n("stock") : null,
             notes: s("notes"),
           },
           item ? "PUT" : "POST",
@@ -134,7 +138,7 @@ export function EditorDialog({
             level: n("level"),
             notes: s("notes"),
             points: parsed,
-            fileId: s("fileId") || null,
+            fileId: attachment || null,
           },
           item ? "PUT" : "POST",
         );
@@ -231,8 +235,8 @@ export function EditorDialog({
                   min="0"
                   max="1000000"
                   step="0.1"
-                  required
-                  defaultValue={editor.item?.stock ?? 1000}
+                  placeholder="Unknown — leave blank"
+                  defaultValue={editor.item?.stock ?? ""}
                 />
               </Field>
               <Field label="Lot notes" wide>
@@ -421,7 +425,10 @@ export function EditorDialog({
                   </option>
                   {state.beans.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.name} · {b.stock} g available
+                      {b.name} ·{" "}
+                      {b.stock === null
+                        ? "stock unknown"
+                        : `${b.stock} g available`}
                     </option>
                   ))}
                 </select>
@@ -516,9 +523,13 @@ export function EditorDialog({
                 </select>
               </Field>
               <Field label="Original log attachment">
-                <select name="fileId" defaultValue={editor.item?.fileId || ""}>
+                <select
+                  name="fileId"
+                  value={attachment}
+                  onChange={(e) => setAttachment(e.target.value)}
+                >
                   <option value="">No file attached</option>
-                  {state.files
+                  {[...state.files, ...newFiles]
                     .filter((f) => /\.(klog|csv|json)$/i.test(f.name))
                     .map((f) => (
                       <option key={f.id} value={f.id}>
@@ -526,6 +537,35 @@ export function EditorDialog({
                       </option>
                     ))}
                 </select>
+              </Field>
+              <Field label="Upload a roast log (.klog)" wide>
+                <input
+                  type="file"
+                  accept=".klog"
+                  disabled={busy}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setBusy(true);
+                    setError("");
+                    try {
+                      const saved = await upload(file);
+                      setNewFiles((old) => [
+                        ...old.filter((f) => f.id !== saved.id),
+                        { id: saved.id, name: file.name },
+                      ]);
+                      setAttachment(saved.id);
+                    } catch (err) {
+                      setError((err as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                />
+                <small>
+                  Save the roast to attach the uploaded log. Your entered
+                  details and tasting history stay with the same run.
+                </small>
               </Field>
               <Field label="Roast observations" wide>
                 <textarea
@@ -538,8 +578,8 @@ export function EditorDialog({
                 <summary>Optional measured temperature curve</summary>
                 <p className="form-note">
                   Paste one time_seconds,temperature_celsius pair per line.
-                  Original log attachments are archived, not automatically
-                  decoded.{" "}
+                  Attached Kaffelogic logs provide their measured curves in the
+                  run dashboard.{" "}
                   {editor.item?.points
                     ? "Leave blank to retain the existing curve."
                     : ""}
@@ -562,13 +602,33 @@ export function EditorDialog({
                   defaultValue={editor.roastId || ""}
                 >
                   <option value="" disabled>
-                    Select a roast
+                    Select a roast or recorded run
                   </option>
                   {state.roasts.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>
                   ))}
+                  {(state.deviceRuns || [])
+                    .filter(
+                      (run) =>
+                        !state.roasts.some(
+                          (r) =>
+                            r.id === run.roastId ||
+                            run.files.some((f) => f.id === r.fileId),
+                        ),
+                    )
+                    .map((run) => (
+                      <option key={run.id} value={run.id}>
+                        {run.name} · {run.files[0]?.name} ·{" "}
+                        {run.roastedAt
+                          ? new Date(run.roastedAt).toLocaleDateString()
+                          : "Date unknown"}
+                        {run.category !== "recorded"
+                          ? ` · ${run.category}`
+                          : ""}
+                      </option>
+                    ))}
                 </select>
               </Field>
               <Field label="Taster">

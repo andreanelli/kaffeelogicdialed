@@ -22,7 +22,7 @@ npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:3001**. Both servers bind only to loopback; this release has no accounts and must not be exposed as a public service.
+Open **http://127.0.0.1:3001**. Both local servers bind only to loopback and have no authentication; do not expose them publicly. For authenticated hosting on Cloudflare Pages and Supabase, see [Hosting setup](docs/HOSTING.md). The cloud implementation is prepared; account setup, deployment, and live-service verification are still required.
 
 ## Start a notebook
 

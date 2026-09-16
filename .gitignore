@@ -5,3 +5,7 @@ data/
 .env
 playwright-report/
 test-results/
+.env.*
+!.env.cloud.example
+.dev.vars
+.wrangler/

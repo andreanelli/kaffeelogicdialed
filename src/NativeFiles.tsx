@@ -1,3 +1,4 @@
+import { RoastDashboard } from "./RoastDashboard";
 import { useEffect, useRef, useState } from "react";
 import { Download, X, FileCheck2 } from "lucide-react";
 import { api } from "./api";
@@ -54,10 +55,12 @@ function Modal({
   title,
   onClose,
   children,
+  wide = false,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -66,7 +69,7 @@ function Modal({
   return (
     <dialog
       ref={ref}
-      className="editor import-dialog"
+      className={`editor import-dialog ${wide ? "roast-analysis-dialog" : ""}`}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -87,82 +90,6 @@ function Modal({
       </header>
       {children}
     </dialog>
-  );
-}
-function SignalChart({ doc }: { doc: NativeDocument }) {
-  const [key, setKey] = useState("temp");
-  const channel =
-    doc.channels.find((c) => c.key === key) ||
-    doc.channels.find((c) => c.index > 0);
-  if (!channel) return null;
-  const points = doc.rows
-    .filter((r) => r[0] !== null && r[channel.index] !== null)
-    .map((r) => [r[0]!, r[channel.index]!]);
-  if (!points.length) return <p>No values for this channel.</p>;
-  const minX = points[0][0],
-    maxX = points.at(-1)![0];
-  let minY = Math.min(...points.map((p) => p[1])),
-    maxY = Math.max(...points.map((p) => p[1]));
-  if (minY === maxY) {
-    minY -= 1;
-    maxY += 1;
-  }
-  const x = (t: number) => 55 + ((t - minX) / (maxX - minX || 1)) * 690,
-    y = (t: number) => 215 - ((t - minY) / (maxY - minY)) * 185;
-  return (
-    <>
-      <div className="section-heading">
-        <h3>Recorded measurements</h3>
-        <select
-          aria-label="Measurement channel"
-          value={channel.key}
-          onChange={(e) => setKey(e.target.value)}
-        >
-          {doc.channels
-            .filter((c) => c.index > 0)
-            .map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.label} · {c.unit}
-              </option>
-            ))}
-        </select>
-      </div>
-      <svg
-        viewBox="0 0 780 255"
-        className="signal-chart"
-        role="img"
-        aria-label={`${channel.label} in ${channel.unit}, recorded time in seconds`}
-      >
-        {[0, 0.25, 0.5, 0.75, 1].map((v) => (
-          <g key={v}>
-            <line
-              x1="55"
-              x2="745"
-              y1={y(minY + v * (maxY - minY))}
-              y2={y(minY + v * (maxY - minY))}
-              stroke="#e4e7da"
-            />
-            <text x="45" y={y(minY + v * (maxY - minY)) + 4} textAnchor="end">
-              {(minY + v * (maxY - minY)).toFixed(1)}
-            </text>
-            <text x={x(minX + v * (maxX - minX))} y="239" textAnchor="middle">
-              {(minX + v * (maxX - minX)).toFixed(0)}s
-            </text>
-          </g>
-        ))}
-        <path
-          d={points
-            .map((p, i) => `${i ? "L" : "M"}${x(p[0])},${y(p[1])}`)
-            .join(" ")}
-          fill="none"
-          stroke="#a94f31"
-          strokeWidth="2"
-        />
-      </svg>
-      <p className="form-note">
-        {doc.rows.length} recorded samples, including cooling. {doc.timingNote}
-      </p>
-    </>
   );
 }
 const localInput = (iso?: string | null) => {
@@ -228,6 +155,7 @@ export function NativeInspector({
   }
   return (
     <Modal
+      wide={doc?.kind === "log"}
       title={file?.name || "Native file"}
       onClose={() => {
         if (!busy) onClose();
@@ -274,16 +202,20 @@ export function NativeInspector({
                   onClick={() => setTab(t)}
                   className={tab === t ? "active" : ""}
                 >
-                  {t === "import" ? "Add to notebook" : t}
+                  {t === "import"
+                    ? "Add to notebook"
+                    : t === "overview" && doc.kind === "log"
+                      ? "Dashboard"
+                      : t}
                 </button>
               ))}
             </div>
             {tab === "overview" && (
               <>
-                <h2>{doc.summary.name}</h2>
+                {doc.kind !== "log" && <h2>{doc.summary.name}</h2>}
                 <p className="preserve-lines">{doc.summary.description}</p>
                 {doc.kind === "log" ? (
-                  <SignalChart doc={doc} />
+                  <RoastDashboard doc={doc} />
                 ) : (
                   doc.curves.roast_profile && (
                     <>

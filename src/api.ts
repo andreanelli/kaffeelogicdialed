@@ -1,3 +1,4 @@
+import { authHeaders } from "./auth";
 export async function api<T = unknown>(
   path: string,
   body?: unknown,
@@ -5,7 +6,10 @@ export async function api<T = unknown>(
 ): Promise<T> {
   const response = await fetch(`/api${path}`, {
     method: method || (body === undefined ? "GET" : "POST"),
-    headers: body === undefined ? {} : { "Content-Type": "application/json" },
+    headers: {
+      ...(await authHeaders()),
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!response.ok) {

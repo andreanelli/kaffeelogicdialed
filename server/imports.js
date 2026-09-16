@@ -15,12 +15,10 @@ export const fail = (message, status = 400) =>
 export const fingerprint = (value) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export function initImports(store) {
-  store.db.exec(
-    "CREATE TABLE IF NOT EXISTS import_keys (key TEXT PRIMARY KEY, entity_id TEXT NOT NULL, fingerprint TEXT NOT NULL, batch_id TEXT NOT NULL)",
-  );
+  store.initImports();
 }
 export function getFile(s, id) {
-  const f = s.db.prepare("SELECT * FROM files WHERE id=?").get(id);
+  const f = s.file(id);
   if (!f) throw fail("File not found", 404);
   return f;
 }
@@ -228,9 +226,7 @@ export function previewCsv(s, input) {
       const key = value("externalId")
         ? `csv:${fingerprint([options.dataset, value("externalId")])}`
         : `roast:${hash}`;
-      const old = s.db
-        .prepare("SELECT * FROM import_keys WHERE key=?")
-        .get(key);
+      const old = s.importKey(key);
       if (old && old.fingerprint !== hash)
         throw fail(
           "This source roast ID already exists with different values. Resolve the conflict; no record will be overwritten.",
@@ -281,11 +277,7 @@ export function previewCsv(s, input) {
       const tastingKey = tasting
         ? `tasting:${key}:${fingerprint(tasting)}`
         : null;
-      const priorTasting =
-        tastingKey &&
-        s.db
-          .prepare("SELECT entity_id FROM import_keys WHERE key=?")
-          .get(tastingKey);
+      const priorTasting = tastingKey && s.importKey(tastingKey);
       const inBatch = seen.has(key);
       seen.set(key, hash);
       const duplicate = !!old || inBatch;
@@ -352,9 +344,7 @@ export function commitCsv(s, draftId) {
       return v;
     };
     const addKey = (key, id, hash) => {
-      s.db
-        .prepare("INSERT INTO import_keys VALUES (?,?,?,?)")
-        .run(key, id, hash, batchId);
+      s.addImportKey(key, id, hash, batchId);
       keys.push(key);
     };
     for (const row of preview.rows) {
@@ -407,6 +397,11 @@ export function rollbackBatch(s, id) {
   return s.transaction(() => {
     const batch = reference(s, id, "importBatch");
     if (batch.status === "rolledBack") return batch;
+    if (batch.status === "modified")
+      throw fail(
+        "Records were deleted from this batch; rollback is unavailable.",
+        409,
+      );
     const ids = new Set(batch.records.map((r) => r.id));
     for (const record of batch.records) {
       const current = reference(s, record.id, record.kind);
@@ -425,7 +420,7 @@ export function rollbackBatch(s, id) {
       "versionId",
       "parentVersionId",
     ];
-    for (const row of s.db.prepare("SELECT id,data FROM entities").all()) {
+    for (const row of s.allEntities()) {
       if (ids.has(row.id)) continue;
       const data = JSON.parse(row.data);
       if (refs.some((k) => ids.has(data[k])))
@@ -434,9 +429,8 @@ export function rollbackBatch(s, id) {
           409,
         );
     }
-    for (const record of [...batch.records].reverse())
-      s.db.prepare("DELETE FROM entities WHERE id=?").run(record.id);
-    s.db.prepare("DELETE FROM import_keys WHERE batch_id=?").run(id);
+    for (const record of [...batch.records].reverse()) s.remove(record.id);
+    s.removeImportKeys("batch_id", id);
     return s.put(
       "importBatch",
       {
@@ -457,9 +451,7 @@ export function importNativeProfile(s, fileId) {
         "This profile cannot be imported: " + parsed.diagnostics.join("; "),
       );
     const key = `native-profile:${file.sha256}`,
-      existing = s.db
-        .prepare("SELECT entity_id FROM import_keys WHERE key=?")
-        .get(key);
+      existing = s.importKey(key);
     if (existing)
       return {
         ...reference(s, existing.entity_id, "version"),
@@ -491,9 +483,7 @@ export function importNativeProfile(s, fileId) {
       },
       importBatchId: batchId,
     });
-    s.db
-      .prepare("INSERT INTO import_keys VALUES (?,?,?,?)")
-      .run(key, v.id, file.sha256, batchId);
+    s.addImportKey(key, v.id, file.sha256, batchId);
     s.put(
       "importBatch",
       {
@@ -523,10 +513,10 @@ export function importNativeLog(s, fileId, fields) {
       !parsed.curves.roast_profile
     )
       throw fail("Unsupported native log.");
+    const linked = s.list("roast").find((r) => r.fileId === file.id);
+    if (linked) return { ...linked, duplicate: true };
     const key = `native-log:${file.sha256}`,
-      old = s.db
-        .prepare("SELECT entity_id FROM import_keys WHERE key=?")
-        .get(key);
+      old = s.importKey(key);
     if (old)
       return { ...reference(s, old.entity_id, "roast"), duplicate: true };
     reference(s, fields.beanId, "bean");
@@ -578,9 +568,7 @@ export function importNativeLog(s, fileId, fields) {
         timingNote: parsed.timingNote || null,
       },
     });
-    s.db
-      .prepare("INSERT INTO import_keys VALUES (?,?,?,?)")
-      .run(key, roast.id, file.sha256, batchId);
+    s.addImportKey(key, roast.id, file.sha256, batchId);
     s.put(
       "importBatch",
       {
@@ -598,6 +586,12 @@ export function importNativeLog(s, fileId, fields) {
       },
       batchId,
     );
+    for (const run of s.list("deviceRun"))
+      if (run.files.some((f) => f.id === file.id)) {
+        for (const cup of s.list("cupping"))
+          if (cup.roastId === run.id)
+            s.put("cupping", { ...cup, roastId: roast.id }, cup.id);
+      }
     return roast;
   });
 }

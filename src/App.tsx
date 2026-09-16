@@ -1,3 +1,6 @@
+import { cloudMode } from "./auth";
+import { RecordManager } from "./RecordManager";
+import { RunHistory } from "./RunHistory";
 import HistoryImporter from "./HistoryImporter";
 import { NativeInspector, NativeEditor } from "./NativeFiles";
 import { useEffect, useRef, useState } from "react";
@@ -37,9 +40,11 @@ const pages = [
   { id: "beans", label: "Green coffee", icon: Leaf },
   { id: "archive", label: "File archive", icon: FileArchive },
   { id: "imports", label: "Import history", icon: FileSpreadsheet },
+  { id: "records", label: "Manage records", icon: Settings2 },
 ] as const;
 type Page = (typeof pages)[number]["id"] | "device" | "settings";
 const empty: State = {
+  deviceRuns: [],
   beans: [],
   profiles: [],
   versions: [],
@@ -381,7 +386,10 @@ export default function App() {
         <div className="workspace-label">
           <span className="workspace-monogram">d.</span>
           <span>
-            Dialed workspace<small>Personal roast lab</small>
+            Dialed workspace
+            <small>
+              {cloudMode ? "Shared roast lab" : "Personal roast lab"}
+            </small>
           </span>
         </div>
         <div className="nav-caption">THE NOTEBOOK</div>
@@ -440,7 +448,8 @@ export default function App() {
           </div>
           <div className="topbar-right">
             <span className="local-indicator">
-              <span className="status-dot green" /> Local workspace
+              <span className="status-dot green" />{" "}
+              {cloudMode ? "Shared workspace" : "Local workspace"}
             </span>
             <span className="avatar">D.</span>
           </div>
@@ -474,6 +483,8 @@ export default function App() {
                         "Your old notebook, with a clear path into the new one.",
                       device: "Your notebook meets your Nano 7.",
                       settings: "A little housekeeping for your roasting lab.",
+                      records:
+                        "Remove entries while protecting the history linked to them.",
                     } as Record<Page, string>
                   )[page]
                 }
@@ -528,13 +539,31 @@ export default function App() {
                 </button>
               }
             >
-              {loadError} · Start the backend with npm run dev.
+              {loadError}
+              {!cloudMode && " · Start the backend with npm run dev."}
             </Empty>
           ) : (
             <>
+              {page === "records" && <RecordManager onSaved={refresh} />}
+              {page === "journal" && (
+                <RunHistory
+                  runs={state.deviceRuns || []}
+                  roasts={state.roasts}
+                  onInspect={setInspectedFile}
+                  onEdit={(item) => setEditor({ type: "roast", item })}
+                  onTaste={(id) => setEditor({ type: "cupping", roastId: id })}
+                />
+              )}
               {page === "journal" && (
                 <>
-                  <div className="stats-row">
+                  <div
+                    className="stats-row"
+                    style={
+                      !roasts.length && state.deviceRuns?.length
+                        ? { display: "none" }
+                        : undefined
+                    }
+                  >
                     <div>
                       <span className="stat-label">ROASTS LOGGED</span>
                       <strong>
@@ -703,7 +732,7 @@ export default function App() {
                                       setInspectedFile(featured.fileId)
                                     }
                                   >
-                                    Inspect native measurements & settings
+                                    Open full roast dashboard
                                   </button>
                                 )}
                               <div className="button-row">
@@ -803,9 +832,11 @@ export default function App() {
                               className="text-button"
                               onClick={() => navigate("device")}
                             >
-                              {device?.connected
-                                ? "Open simulator"
-                                : "Explore device simulator"}{" "}
+                              {cloudMode
+                                ? "Using your roaster"
+                                : device?.connected
+                                  ? "Open simulator"
+                                  : "Explore device simulator"}{" "}
                               <ArrowRight size={14} />
                             </button>
                           </section>
@@ -862,7 +893,7 @@ export default function App() {
                         )}
                       </section>
                     </>
-                  ) : (
+                  ) : state.deviceRuns?.length ? null : (
                     <Empty
                       title="Your roasting story starts here."
                       action={
@@ -1111,10 +1142,12 @@ export default function App() {
                                 {c.demo ? " / SAMPLE" : ""}
                               </span>
                               <h2>
-                                {
-                                  state.roasts.find((r) => r.id === c.roastId)
-                                    ?.name
-                                }
+                                {state.roasts.find((r) => r.id === c.roastId)
+                                  ?.name ||
+                                  state.deviceRuns?.find(
+                                    (r) => r.id === c.roastId,
+                                  )?.name ||
+                                  "Unknown roast"}
                               </h2>
                             </div>
                             <div className="big-score">
@@ -1201,7 +1234,10 @@ export default function App() {
                           <div className="coffee-stock">
                             <span>IN THE CUPBOARD</span>
                             <strong>
-                              {b.stock.toLocaleString()} <small>g</small>
+                              {b.stock === null
+                                ? "Unknown"
+                                : b.stock.toLocaleString()}{" "}
+                              {b.stock !== null && <small>g</small>}
                             </strong>
                           </div>
                           {b.notes && <p className="muted">{b.notes}</p>}
@@ -1362,7 +1398,28 @@ export default function App() {
                   )}
                 </>
               )}
-              {page === "device" && (
+              {page === "device" && cloudMode && (
+                <section className="panel padded">
+                  <span className="eyebrow">KAFFELOGIC NANO 7</span>
+                  <h2>Your roaster connects locally</h2>
+                  <p>
+                    Browse and edit profiles in the library, then download a
+                    native profile to open in Kaffelogic Studio. Upload
+                    completed roast logs to keep your shared journal up to date.
+                  </p>
+                  <p>
+                    USB communication and Studio folder access require the local
+                    app on the computer connected to your roaster.
+                  </p>
+                  <button
+                    className="button primary"
+                    onClick={() => navigate("profiles")}
+                  >
+                    Open profile library
+                  </button>
+                </section>
+              )}
+              {page === "device" && !cloudMode && (
                 <>
                   <section className="panel device-hero">
                     <div className="device-illustration">
@@ -1540,19 +1597,23 @@ export default function App() {
                 <div className="settings-stack">
                   <section className="panel padded">
                     <span className="eyebrow">YOUR DATA, YOUR NOTEBOOK</span>
-                    <h2>Local, persistent, portable.</h2>
+                    <h2>
+                      {cloudMode
+                        ? "Shared, private, portable."
+                        : "Local, persistent, portable."}
+                    </h2>
                     <p>
-                      Roasts, revisions, tastings, and original files live in a
-                      SQLite database on this computer. Download a complete JSON
-                      export, including original files, for an additional copy.
+                      {cloudMode
+                        ? "Roasts, revisions, tastings, and original files are stored in your private shared workspace. Export your records and original files for an additional copy."
+                        : "Roasts, revisions, tastings, and original files live in a SQLite database on this computer. Download a JSON export, including original files, for an additional copy."}
                     </p>
                     <a className="button primary" href="/api/backup" download>
                       <Download size={16} /> Export complete workspace
                     </a>
                     <p className="form-note">
-                      For a restorable backup, stop the backend and copy the
-                      entire data folder. JSON restore and shared accounts are
-                      planned; this release is local and single-workspace.
+                      {cloudMode
+                        ? "Keep regular exports in a safe place. An automatic restore tool is not yet available; contact the workspace owner for recovery."
+                        : "For a restorable backup, stop the backend and copy the entire data folder. This local notebook is separate from any hosted workspace."}
                     </p>
                   </section>
                   <section className="panel padded">
@@ -1610,17 +1671,23 @@ export default function App() {
                         </span>
                       </li>
                       <li>
-                        <strong>A shared Dialed workspace</strong>
+                        <strong>
+                          {cloudMode
+                            ? "Local device companion"
+                            : "A shared Dialed workspace"}
+                        </strong>
                         <span>
-                          Accounts, team access, hosted storage, and a local
-                          device companion.
+                          {cloudMode
+                            ? "Connect the shared notebook to the computer beside your roaster."
+                            : "The Cloudflare and Supabase build adds accounts and shared storage. A local device companion remains planned."}
                         </span>
                       </li>
                       <li>
                         <strong>Your existing notebook</strong>
                         <span>
                           Use Import history to map a CSV export of your sheet,
-                          review dates and units, and import historical tastings.
+                          review dates and units, and import historical
+                          tastings.
                         </span>
                       </li>
                     </ol>

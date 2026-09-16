@@ -21,11 +21,15 @@ export function archiveFile(store, name, content) {
       status: 400,
     });
   const sha256 = createHash("sha256").update(content).digest("hex");
-  const old = store.db
-    .prepare(
-      "SELECT id,name,sha256,created_at AS createdAt FROM files WHERE sha256=?",
-    )
-    .get(sha256);
+  const existing = store.fileByHash(sha256);
+  const old = existing
+    ? {
+        id: existing.id,
+        name: existing.name,
+        sha256: existing.sha256,
+        createdAt: existing.created_at,
+      }
+    : null;
   if (old) return { ...old, duplicate: true };
   const data = {
     id: randomUUID(),
@@ -33,15 +37,24 @@ export function archiveFile(store, name, content) {
     sha256,
     createdAt: new Date().toISOString(),
   };
-  store.db
-    .prepare("INSERT INTO files VALUES (?,?,?,?,?)")
-    .run(data.id, name, sha256, content, data.createdAt);
+  store.addFile({
+    id: data.id,
+    name,
+    sha256,
+    content,
+    created_at: data.createdAt,
+  });
   return { ...data, duplicate: false };
 }
 export function listFiles(store) {
-  return store.db
-    .prepare(
-      "SELECT id,name,sha256,length(content) AS size,created_at AS createdAt FROM files ORDER BY created_at DESC",
-    )
-    .all();
+  return store
+    .allFiles()
+    .map((f) => ({
+      id: f.id,
+      name: f.name,
+      sha256: f.sha256,
+      size: f.content.length,
+      createdAt: f.created_at,
+    }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

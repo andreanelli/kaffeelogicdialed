@@ -202,3 +202,103 @@ test("dates and CSV structure reject ambiguity and impossible values", () => {
     /could not be parsed/,
   );
 });
+
+test("native logs require actual masses, retain embedded revisions, and roll back failed imports", async (t) => {
+  const { importNativeLog } = await import("../server/imports.js");
+  const { s, bean } = setup(t, header + row);
+  const log = Buffer.from(
+    native +
+      "native_schema_version:1.8\r\nroast_date:06/09/2026 15:00:00 UTC\r\ntime\t#=temp\r\n0\t25\r\n200\t180\r\n300\t100\r\n!roast_end:220\r\n",
+  );
+  const f = archiveFile(s, "fixture.klog", log);
+  const fields = {
+    name: "Imported log",
+    beanId: bean.id,
+    roastedAt: "2026-09-06T15:00:00.000Z",
+    greenWeight: 100,
+    roastedWeight: 86,
+    duration: 220,
+    level: 2.1,
+  };
+  assert.throws(() =>
+    importNativeLog(s, f.id, { ...fields, greenWeight: undefined }),
+  );
+  assert.equal(s.list("profile").length, 0);
+  const roast = importNativeLog(s, f.id, fields);
+  assert.equal(roast.points.length, 2);
+  assert.equal(roast.inventoryConsumed, false);
+  assert.equal(s.get(bean.id, "bean").stock, 1000);
+  assert.equal(s.get(roast.profileVersionId, "version").native.kind, "log");
+  assert.equal(importNativeLog(s, f.id, fields).id, roast.id);
+  rollbackBatch(s, roast.importBatchId);
+  assert.equal(s.list("roast").length, 0);
+  assert.equal(s.list("profile").length, 0);
+});
+
+test("run catalog groups alternate files, keeps short/incomplete runs and is idempotent", async (t) => {
+  const { catalogRuns } = await import("../server/run-history.js");
+  const { s } = setup(t, header + row);
+  const log =
+    native +
+    "native_schema_version:1.8\r\nroast_date:06/09/2026 15:00:00 UTC\r\ntime\t#=temp\r\n0\t25\r\n200\t180\r\n!roast_end:220\r\n";
+  archiveFile(s, "one.klog", Buffer.from(log));
+  archiveFile(
+    s,
+    "alternate.klog",
+    Buffer.from(
+      log.replace("time\t#=temp", "tasting_notes:comment\r\ntime\t#=temp"),
+    ),
+  );
+  archiveFile(
+    s,
+    "short.klog",
+    Buffer.from(
+      log
+        .replace("15:00:00", "16:00:00")
+        .replace("roast_end:220", "roast_end:5"),
+    ),
+  );
+  archiveFile(
+    s,
+    "partial.klog",
+    Buffer.from(
+      log.replace("15:00:00", "17:00:00").replace("!roast_end:220\r\n", ""),
+    ),
+  );
+  const runs = catalogRuns(s);
+  assert.equal(runs.length, 3);
+  assert.equal(runs.find((r) => r.category === "recorded").files.length, 2);
+  assert.equal(runs.filter((r) => r.category === "short").length, 1);
+  assert.equal(runs.filter((r) => r.category === "incomplete").length, 1);
+  catalogRuns(s);
+  assert.equal(s.list("deviceRun").length, 3);
+  assert.equal(s.list("roast").length, 0);
+});
+
+test("deleting cataloged runs prevents automatic reappearance and retains original files", async (t) => {
+  const { catalogRuns } = await import("../server/run-history.js");
+  const { deleteRecord } = await import("../server/records.js");
+  const { s } = setup(t, header + row);
+  archiveFile(
+    s,
+    "run.klog",
+    Buffer.from(
+      native +
+        "native_schema_version:1.8\r\ntime\t#=temp\r\n0\t25\r\n1\t30\r\n",
+    ),
+  );
+  const run = catalogRuns(s)[0];
+  deleteRecord(s, "deviceRun", run.id);
+  assert.equal(catalogRuns(s).length, 0);
+  assert.equal(s.db.prepare("SELECT COUNT(*) n FROM files").get().n, 2);
+});
+test("explicit imported-record deletion invalidates rollback without corrupting audit history", async (t) => {
+  const { deleteRecord } = await import("../server/records.js");
+  const { s, options } = setup(t, header + row);
+  const batch = commitCsv(s, createDraft(s, options).draftId);
+  deleteRecord(s, "cupping", s.list("cupping")[0].id);
+  assert.equal(s.get(batch.id, "importBatch").status, "modified");
+  assert.throws(() => rollbackBatch(s, batch.id), /rollback is unavailable/);
+  deleteRecord(s, "roast", s.list("roast")[0].id);
+  assert.equal(createDraft(s, options).counts.ready, 1);
+});

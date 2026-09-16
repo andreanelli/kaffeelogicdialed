@@ -19,7 +19,7 @@ export const beanSchema = z.object({
   origin: text,
   process: text,
   variety: z.string().max(200).default(""),
-  stock: z.number().finite().min(0).max(1000000),
+  stock: z.number().finite().min(0).max(1000000).nullable(),
   notes,
 });
 export const profileSchema = z.object({

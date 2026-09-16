@@ -67,9 +67,7 @@ export class StudioFolderAdapter {
       throw fail(
         "Set DIALED_PROFILE_OUTBOX on the backend to enable profile staging.",
       );
-    const file = this.store.db
-      .prepare("SELECT * FROM files WHERE id=?")
-      .get(fileId);
+    const file = this.store.file(fileId);
     if (!file) throw fail("File not found", 404);
     if (!/\.(kpro|kpro2)$/i.test(file.name))
       throw fail("Only original Kaffelogic profile files can be staged.");
