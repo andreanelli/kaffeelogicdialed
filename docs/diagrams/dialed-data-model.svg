@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1160" viewBox="0 0 1600 1160"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8" fill="none" stroke="#65736b" stroke-width="1.4"/></marker></defs><rect width="1600" height="1160" fill="#f6f5f0"/>
+<text x="60" y="49" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">DIALED / ROAST LAB</text>
+<text x="60" y="103" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="700">The data model</text>
+<text x="60" y="143" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="400">Three application tables in Supabase; coffee-domain objects are stored inside JSON records.</text>
+<text x="60" y="194" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">01 / PHYSICAL DATABASE</text>
+<rect x="60" y="220" width="295" height="145" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M80 240v105" stroke="#436c96" stroke-width="4"/>
+<text x="98" y="259" fill="#436c96" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">auth.users</text>
+<text x="98" y="292" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">id · uuid · primary key</text>
+<text x="98" y="319" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">Supabase-managed users</text>
+<rect x="440" y="220" width="330" height="145" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M460 240v105" stroke="#2b7259" stroke-width="4"/>
+<text x="478" y="259" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">dialed_members</text>
+<text x="478" y="292" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">workspace_id · uuid · PK, FK</text>
+<text x="478" y="319" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">user_id · uuid · PK, FK</text>
+<rect x="855" y="220" width="325" height="145" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M875 240v105" stroke="#2b7259" stroke-width="4"/>
+<text x="893" y="259" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">dialed_workspaces</text>
+<text x="893" y="292" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">id · uuid · primary key</text>
+<text x="893" y="319" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">name · text</text>
+<text x="893" y="346" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">revision · bigint</text>
+<polyline points="355,280 440,280" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="359" y="263" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<polyline points="855,320 770,320" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="773" y="304" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<rect x="855" y="405" width="685" height="178" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M875 425v138" stroke="#2b7259" stroke-width="4"/>
+<text x="893" y="444" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">dialed_records</text>
+<text x="893" y="477" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">workspace_id · uuid · FK      collection · text      key · text</text>
+<text x="893" y="504" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">payload · jsonb                       ordinal · bigint identity</text>
+<text x="893" y="531" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">Composite primary key: (workspace_id, collection, key)</text>
+<polyline points="1018,365 1018,405" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1032" y="389" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<rect x="60" y="405" width="710" height="178" rx="16" fill="#eaf0e8" stroke="#d5ddd5"/>
+<text x="85" y="439" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">FOUR COLLECTIONS</text>
+<text x="85" y="471" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="400">entities → kind + serialized domain data</text>
+<text x="85" y="498" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="400">files → metadata, SHA-256, original bytes as base64</text>
+<text x="85" y="525" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="400">keys → import deduplication and batch links</text>
+<text x="85" y="552" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="400">meta → notebook metadata and deleted-run markers</text>
+<text x="60" y="632" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">02 / LOGICAL COFFEE MODEL</text>
+<text x="60" y="661" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">Arrows run from one object to many. These links are validated by app code, not SQL foreign keys.</text>
+<rect x="60" y="698" width="260" height="121" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M80 718v81" stroke="#2b7259" stroke-width="4"/>
+<text x="98" y="737" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Profile</text>
+<text x="98" y="770" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">name, description</text>
+<rect x="410" y="698" width="310" height="121" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M430 718v81" stroke="#2b7259" stroke-width="4"/>
+<text x="448" y="737" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Profile revision</text>
+<text x="448" y="770" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">profileId, number, curve</text>
+<text x="448" y="797" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">immutable settings</text>
+<rect x="820" y="698" width="300" height="121" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M840 718v81" stroke="#2b7259" stroke-width="4"/>
+<text x="858" y="737" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Roast</text>
+<text x="858" y="770" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">beanId, profileVersionId</text>
+<text x="858" y="797" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">weights, time, curve</text>
+<rect x="1230" y="698" width="310" height="121" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M1250 718v81" stroke="#2b7259" stroke-width="4"/>
+<text x="1268" y="737" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Tasting / cupping</text>
+<text x="1268" y="770" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">roastId, taster</text>
+<text x="1268" y="797" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">score, sensory notes</text>
+<polyline points="320,758 410,758" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="329" y="741" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<polyline points="720,758 820,758" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="729" y="741" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<polyline points="1120,758 1230,758" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1137" y="741" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<rect x="820" y="900" width="300" height="119" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M840 920v79" stroke="#2b7259" stroke-width="4"/>
+<text x="858" y="939" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Coffee lot</text>
+<text x="858" y="972" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">origin, process, stock</text>
+<polyline points="970,900 970,819" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="985" y="864" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="400">1 → many</text>
+<rect x="1230" y="900" width="310" height="119" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M1250 920v79" stroke="#2b7259" stroke-width="4"/>
+<text x="1268" y="939" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Experiment</text>
+<text x="1268" y="972" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">hypothesis, conclusion</text>
+<polyline points="1230,951 1168,951 1168,852 1060,852 1060,819" fill="none" stroke="#65736b" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="1190" y="883" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400">optional for a roast</text>
+<rect x="60" y="900" width="660" height="119" rx="16" fill="#fff" stroke="#d5ddd5"/>
+<path d="M80 920v79" stroke="#a87639" stroke-width="4"/>
+<text x="98" y="939" fill="#a87639" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700">Archived files &amp; supporting records</text>
+<text x="98" y="972" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">Files can source profile revisions, roasts and device runs.</text>
+<text x="98" y="999" fill="#20382f" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="400">Import drafts/batches track provenance and rollback.</text>
+<text x="60" y="1080" fill="#2b7259" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700">Storage detail: native files live in PostgreSQL JSON records; Supabase Storage is not used.</text>
+<text x="60" y="1122" fill="#65736b" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400">Verified against the live Supabase Schema Visualizer and repository schema / domain code · 16 Sep 2026</text>
+</svg>

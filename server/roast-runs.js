@@ -59,13 +59,13 @@ export function syncRoastRun(store, roast) {
         { status: 400 },
       );
   }
-  for (const match of matches)
-    if (match.id !== id) {
-      for (const cup of store.list("cupping"))
-        if (cup.roastId === match.id)
-          store.put("cupping", { ...cup, roastId: roast.id }, cup.id);
-      store.remove(match.id);
-    }
+  for (const match of matches) {
+    for (const kind of ["cupping", "brew"])
+      for (const record of store.list(kind))
+        if (record.roastId === match.id)
+          store.put(kind, { ...record, roastId: roast.id }, record.id);
+    if (match.id !== id) store.remove(match.id);
+  }
   return store.put(
     "deviceRun",
     {

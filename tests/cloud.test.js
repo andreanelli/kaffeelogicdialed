@@ -110,6 +110,15 @@ test("authenticated cloud routes commit only on successful mutations and surface
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).beans, []);
   assert.equal(commits, 0);
+  response = await handleRequest(request("/knowledge"), env, fake);
+  assert.equal((await response.json()).counts.curated, 37);
+  response = await handleRequest(
+    request("/knowledge/search", { query: "Kenya" }),
+    env,
+    fake,
+  );
+  assert.ok((await response.json()).results.length > 0);
+  assert.equal(commits, 0);
   response = await handleRequest(request("/beans", { name: "" }), env, fake);
   assert.equal(response.status, 400);
   assert.equal(commits, 0);
@@ -248,4 +257,134 @@ test("Postgres RLS isolates members and commit RPC enforces role, membership and
   } finally {
     await db.close();
   }
+});
+
+test("cloud persists brew snapshots, pilot plans and linked tasting assessments", async () => {
+  let snapshot = empty();
+  let commits = 0;
+  const fake = async (url, options) => {
+    if (url.endsWith("/user")) return Response.json({ id: "user" });
+    if (url.endsWith("/dialed_snapshot")) return Response.json(snapshot);
+    const { delta } = JSON.parse(options.body);
+    commits++;
+    for (const [key, id] of [
+      ["entities", "id"],
+      ["files", "id"],
+      ["keys", "key"],
+      ["meta", "key"],
+    ]) {
+      const rows = new Map(snapshot[key].map((r) => [r[id], r]));
+      for (const v of delta[key].delete) rows.delete(v);
+      for (const v of delta[key].upsert) rows.set(v[id], v);
+      snapshot[key] = [...rows.values()];
+    }
+    snapshot.revision++;
+    return Response.json({ revision: snapshot.revision });
+  };
+  const request = async (path, body) => {
+    const r = await handleRequest(
+      new Request(`https://dialed.test/api${path}`, {
+        method: body ? "POST" : "GET",
+        headers: {
+          Authorization: "Bearer token",
+          "Content-Type": "application/json",
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      }),
+      env,
+      fake,
+    );
+    return { status: r.status, data: await r.json() };
+  };
+  const lotIds = [];
+  for (const name of ["A", "B", "C"])
+    lotIds.push(
+      (
+        await request("/beans", {
+          name,
+          origin: "Test",
+          process: "washed",
+          stock: null,
+        })
+      ).data.id,
+    );
+  const profile = (
+    await request("/profiles", {
+      name: "Reference",
+      level: 2,
+      points: [
+        { time: 0, temperature: 25 },
+        { time: 500, temperature: 220 },
+      ],
+      changeNote: "Initial",
+    })
+  ).data;
+  const pilot = (
+    await request("/experiments/pilot", {
+      name: "Pilot",
+      lotIds,
+      target: "Sweet and clean",
+      method: "cupping",
+      batchSizeG: 100,
+      restHours: 48,
+      controls: "Same water and dose",
+    })
+  ).data;
+  const roast = (
+    await request("/roasts", {
+      name: "A1",
+      beanId: lotIds[0],
+      profileVersionId: profile.version.id,
+      experimentId: pilot.id,
+      pilotTrialId: "1-1",
+      roastedAt: "2026-09-01T00:00:00Z",
+      greenWeight: 100,
+      roastedWeight: 85,
+      duration: 500,
+      level: 2,
+    })
+  ).data;
+  const equipment = (
+    await request("/equipment", {
+      name: "Cupping bowl",
+      category: "brewer",
+      brand: "Test",
+      model: "Bowl",
+    })
+  ).data;
+  const brew = (
+    await request("/brews", {
+      name: "Reference cup",
+      roastId: roast.id,
+      brewedAt: "2026-09-03T00:00:00Z",
+      method: "cupping",
+      brewerId: equipment.id,
+    })
+  ).data;
+  const cup = await request("/cuppings", {
+    roastId: roast.id,
+    brewId: brew.id,
+    taster: "A",
+    tastedAt: "2026-09-03T00:15:00Z",
+  });
+  assert.equal(cup.status, 201);
+  assert.equal(cup.data.score, null);
+  const before = commits;
+  assert.equal(
+    (
+      await request("/cuppings", {
+        roastId: roast.id,
+        brewId: "missing",
+        taster: "B",
+        tastedAt: "2026-09-03T00:15:00Z",
+      })
+    ).status,
+    404,
+  );
+  assert.equal(commits, before);
+  const state = (await request("/state")).data;
+  assert.equal(state.brews[0].equipmentSnapshot.brewer.model, "Bowl");
+  assert.equal(state.brews[0].restHours, 48);
+  assert.equal(state.cuppings[0].brewId, brew.id);
+  assert.equal(state.experiments[0].pilot.trials.length, 9);
 });

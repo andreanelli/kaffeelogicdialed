@@ -423,7 +423,10 @@ export function rollbackBatch(s, id) {
     for (const row of s.allEntities()) {
       if (ids.has(row.id)) continue;
       const data = JSON.parse(row.data);
-      if (refs.some((k) => ids.has(data[k])))
+      if (
+        refs.some((k) => ids.has(data[k])) ||
+        (data.pilot?.lotIds || []).some((id) => ids.has(id))
+      )
         throw fail(
           "A later record references this import. Rollback is blocked to preserve that history.",
           409,
@@ -588,9 +591,10 @@ export function importNativeLog(s, fileId, fields) {
     );
     for (const run of s.list("deviceRun"))
       if (run.files.some((f) => f.id === file.id)) {
-        for (const cup of s.list("cupping"))
-          if (cup.roastId === run.id)
-            s.put("cupping", { ...cup, roastId: roast.id }, cup.id);
+        for (const kind of ["cupping", "brew"])
+          for (const record of s.list(kind))
+            if (record.roastId === run.id)
+              s.put(kind, { ...record, roastId: roast.id }, record.id);
       }
     return roast;
   });

@@ -1,14 +1,19 @@
+import { KnowledgeEvidence } from "./Knowledge";
+import { BrewingFields, EquipmentFields, PilotFields } from "./BrewingFields";
 import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { api, upload } from "./api";
 import { Chart } from "./Chart";
 import type { Bean, Experiment, Roast, State, Version, Point } from "./types";
 export type Editor =
-  | { type: "roast"; item?: Roast }
+  | { type: "roast"; item?: Roast; preset?: Partial<Roast> }
+  | { type: "brew"; roastId?: string }
+  | { type: "equipment" }
+  | { type: "pilot" }
   | { type: "bean"; item?: Bean }
   | { type: "profile"; item?: Version }
-  | { type: "experiment"; item?: Experiment }
-  | { type: "cupping"; roastId?: string };
+  | { type: "experiment"; item?: Experiment; preset?: Partial<Experiment> }
+  | { type: "cupping"; roastId?: string; brewId?: string };
 export function Field({
   label,
   children,
@@ -59,6 +64,22 @@ export function EditorDialog({
     ],
   );
   const [curveText, setCurveText] = useState("");
+  const experimentDefaults =
+    editor.type === "experiment" ? editor.item || editor.preset : undefined;
+  const roastDefaults =
+    editor.type === "roast" ? editor.item || editor.preset : undefined;
+  const [experimentId, setExperimentId] = useState(
+    roastDefaults?.experimentId || "",
+  );
+  const [pilotTrialId, setPilotTrialId] = useState(
+    roastDefaults?.pilotTrialId || "",
+  );
+  const [tastingRoastId, setTastingRoastId] = useState(
+    "roastId" in editor ? editor.roastId || "" : "",
+  );
+  const [tastingBrewId, setTastingBrewId] = useState(
+    editor.type === "cupping" ? editor.brewId || "" : "",
+  );
   useEffect(() => {
     const dialog = ref.current;
     dialog?.showModal();
@@ -72,7 +93,67 @@ export function EditorDialog({
     const f = new FormData(e.currentTarget);
     const s = (k: string) => String(f.get(k) || "");
     const n = (k: string) => Number(f.get(k));
+    const nullable = (k: string) => (s(k).trim() ? n(k) : null);
     try {
+      if (editor.type === "equipment")
+        await api(
+          "/equipment",
+          Object.fromEntries(
+            [
+              "name",
+              "category",
+              "brand",
+              "model",
+              "configuration",
+              "calibration",
+            ].map((k) => [k, s(k)]),
+          ),
+        );
+      if (editor.type === "pilot")
+        await api("/experiments/pilot", {
+          name: s("name"),
+          lotIds: [s("lot1"), s("lot2"), s("lot3")],
+          target: s("target"),
+          method: s("method"),
+          batchSizeG: n("batchSizeG"),
+          restHours: n("restHours"),
+          controls: s("controls"),
+        });
+      if (editor.type === "brew")
+        await api("/brews", {
+          ...Object.fromEntries(
+            [
+              "name",
+              "roastId",
+              "method",
+              "grindSetting",
+              "filter",
+              "temperatureLocation",
+              "timingOrigin",
+              "waterSource",
+              "storage",
+              "protocol",
+              "notes",
+            ].map((k) => [k, s(k)]),
+          ),
+          ...Object.fromEntries(
+            [
+              "doseG",
+              "waterInputG",
+              "beverageYieldG",
+              "bypassWaterG",
+              "temperatureC",
+              "durationS",
+              "pressureBar",
+              "hardnessMgLCaCO3",
+              "alkalinityMgLCaCO3",
+              "tdsPercent",
+            ].map((k) => [k, nullable(k)]),
+          ),
+          brewerId: s("brewerId") || null,
+          grinderId: s("grinderId") || null,
+          brewedAt: new Date(s("brewedAt")).toISOString(),
+        });
       if (editor.type === "bean")
         await api(
           `/beans${item ? "/" + item.id : ""}`,
@@ -91,6 +172,7 @@ export function EditorDialog({
           `/experiments${item ? "/" + item.id : ""}`,
           {
             name: s("name"),
+            referenceIds: experimentDefaults?.referenceIds || [],
             hypothesis: s("hypothesis"),
             variable: s("variable"),
             status: s("status"),
@@ -130,7 +212,12 @@ export function EditorDialog({
             beanId: s("beanId"),
             profileVersionId: s("profileVersionId"),
             experimentId: s("experimentId") || null,
-            roastedAt: new Date(s("roastedAt")).toISOString(),
+            pilotTrialId: s("pilotTrialId") || null,
+            roastedAt:
+              editor.item?.roastedAt &&
+              s("roastedAt") === localDate(editor.item.roastedAt)
+                ? editor.item.roastedAt
+                : new Date(s("roastedAt")).toISOString(),
             greenWeight: n("greenWeight"),
             roastedWeight: n("roastedWeight"),
             duration: n("duration"),
@@ -148,12 +235,17 @@ export function EditorDialog({
           roastId: s("roastId"),
           taster: s("taster"),
           tastedAt: new Date(s("tastedAt")).toISOString(),
-          score: n("score"),
-          aroma: n("aroma"),
-          acidity: n("acidity"),
-          sweetness: n("sweetness"),
-          body: n("body"),
-          finish: n("finish"),
+          brewId: s("brewId") || null,
+          blindCode: s("blindCode"),
+          descriptors: s("descriptors"),
+          liking: nullable("liking"),
+          targetMatch: nullable("targetMatch"),
+          score: nullable("score"),
+          aroma: nullable("aroma"),
+          acidity: nullable("acidity"),
+          sweetness: nullable("sweetness"),
+          body: nullable("body"),
+          finish: nullable("finish"),
           notes: s("notes"),
         });
       await onSaved();
@@ -198,6 +290,15 @@ export function EditorDialog({
           </button>
         </header>
         <div className="form-grid">
+          {editor.type === "equipment" && <EquipmentFields />}
+          {editor.type === "brew" && (
+            <BrewingFields
+              state={state}
+              roastId={editor.roastId}
+              date={localDate()}
+            />
+          )}
+          {editor.type === "pilot" && <PilotFields state={state} />}
           {editor.type === "bean" && (
             <>
               <Field label="Coffee name" wide>
@@ -250,11 +351,14 @@ export function EditorDialog({
           )}
           {editor.type === "experiment" && (
             <>
+              <div className="wide">
+                <KnowledgeEvidence records={experimentDefaults?.evidence} />
+              </div>
               <Field label="Experiment name" wide>
                 <input
                   name="name"
                   required
-                  defaultValue={editor.item?.name}
+                  defaultValue={experimentDefaults?.name}
                   placeholder="Finding the sweet spot"
                 />
               </Field>
@@ -262,7 +366,7 @@ export function EditorDialog({
                 <textarea
                   name="hypothesis"
                   required
-                  defaultValue={editor.item?.hypothesis}
+                  defaultValue={experimentDefaults?.hypothesis}
                   placeholder="What do you expect to change in the cup, and why?"
                 />
               </Field>
@@ -270,14 +374,14 @@ export function EditorDialog({
                 <input
                   name="variable"
                   required
-                  defaultValue={editor.item?.variable}
+                  defaultValue={experimentDefaults?.variable}
                   placeholder="Roast level: 2.1 → 2.4"
                 />
               </Field>
               <Field label="Status">
                 <select
                   name="status"
-                  defaultValue={editor.item?.status || "planned"}
+                  defaultValue={experimentDefaults?.status || "planned"}
                 >
                   <option value="planned">Planned</option>
                   <option value="active">Active</option>
@@ -287,7 +391,7 @@ export function EditorDialog({
               <Field label="Conclusion" wide>
                 <textarea
                   name="conclusion"
-                  defaultValue={editor.item?.conclusion}
+                  defaultValue={experimentDefaults?.conclusion}
                   placeholder="What did you learn? What will you try next?"
                 />
               </Field>
@@ -410,7 +514,7 @@ export function EditorDialog({
                 <input
                   name="name"
                   required
-                  defaultValue={editor.item?.name}
+                  defaultValue={roastDefaults?.name}
                   placeholder="Gesha, a little sweeter"
                 />
               </Field>
@@ -418,7 +522,7 @@ export function EditorDialog({
                 <select
                   name="beanId"
                   required
-                  defaultValue={editor.item?.beanId || ""}
+                  defaultValue={roastDefaults?.beanId || ""}
                 >
                   <option value="" disabled>
                     Select coffee
@@ -437,7 +541,7 @@ export function EditorDialog({
                 <select
                   name="profileVersionId"
                   required
-                  defaultValue={editor.item?.profileVersionId || ""}
+                  defaultValue={roastDefaults?.profileVersionId || ""}
                 >
                   <option value="" disabled>
                     Select revision
@@ -454,7 +558,7 @@ export function EditorDialog({
                   name="roastedAt"
                   type="datetime-local"
                   required
-                  defaultValue={localDate(editor.item?.roastedAt)}
+                  defaultValue={localDate(roastDefaults?.roastedAt)}
                 />
               </Field>
               <Field label="Roast level">
@@ -465,7 +569,7 @@ export function EditorDialog({
                   max="5.9"
                   step=".1"
                   required
-                  defaultValue={editor.item?.level || 2.1}
+                  defaultValue={roastDefaults?.level ?? ""}
                 />
               </Field>
               <Field label="Green weight (g)">
@@ -476,7 +580,7 @@ export function EditorDialog({
                   max="1000"
                   step=".1"
                   required
-                  defaultValue={editor.item?.greenWeight || 100}
+                  defaultValue={roastDefaults?.greenWeight ?? ""}
                 />
               </Field>
               <Field label="Roasted weight (g)">
@@ -487,7 +591,7 @@ export function EditorDialog({
                   max="1000"
                   step=".1"
                   required
-                  defaultValue={editor.item?.roastedWeight || 86}
+                  defaultValue={roastDefaults?.roastedWeight ?? ""}
                 />
               </Field>
               <Field label="Total roast time (seconds)">
@@ -497,7 +601,7 @@ export function EditorDialog({
                   min="1"
                   max="3600"
                   required
-                  defaultValue={editor.item?.duration || 540}
+                  defaultValue={roastDefaults?.duration ?? ""}
                 />
               </Field>
               <Field label="First crack (seconds, optional)">
@@ -506,13 +610,17 @@ export function EditorDialog({
                   type="number"
                   min="1"
                   max="3600"
-                  defaultValue={editor.item?.firstCrack ?? ""}
+                  defaultValue={roastDefaults?.firstCrack ?? ""}
                 />
               </Field>
               <Field label="Experiment">
                 <select
                   name="experimentId"
-                  defaultValue={editor.item?.experimentId || ""}
+                  value={experimentId}
+                  onChange={(e) => {
+                    setExperimentId(e.target.value);
+                    setPilotTrialId("");
+                  }}
                 >
                   <option value="">Independent roast</option>
                   {state.experiments.map((e) => (
@@ -522,6 +630,25 @@ export function EditorDialog({
                   ))}
                 </select>
               </Field>
+              {state.experiments.find((e) => e.id === experimentId)?.pilot && (
+                <Field label="Pilot trial">
+                  <select
+                    name="pilotTrialId"
+                    value={pilotTrialId}
+                    onChange={(e) => setPilotTrialId(e.target.value)}
+                  >
+                    <option value="">Not assigned to a planned trial</option>
+                    {state.experiments
+                      .find((e) => e.id === experimentId)
+                      ?.pilot?.trials.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.id} · {t.condition} ·{" "}
+                          {state.beans.find((b) => b.id === t.beanId)?.name}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+              )}
               <Field label="Original log attachment">
                 <select
                   name="fileId"
@@ -570,7 +697,7 @@ export function EditorDialog({
               <Field label="Roast observations" wide>
                 <textarea
                   name="notes"
-                  defaultValue={editor.item?.notes}
+                  defaultValue={roastDefaults?.notes}
                   placeholder="Aroma, first crack, adjustments, what to try next…"
                 />
               </Field>
@@ -580,7 +707,7 @@ export function EditorDialog({
                   Paste one time_seconds,temperature_celsius pair per line.
                   Attached Kaffelogic logs provide their measured curves in the
                   run dashboard.{" "}
-                  {editor.item?.points
+                  {roastDefaults?.points
                     ? "Leave blank to retain the existing curve."
                     : ""}
                 </p>
@@ -599,7 +726,11 @@ export function EditorDialog({
                 <select
                   name="roastId"
                   required
-                  defaultValue={editor.roastId || ""}
+                  value={tastingRoastId}
+                  onChange={(e) => {
+                    setTastingRoastId(e.target.value);
+                    setTastingBrewId("");
+                  }}
                 >
                   <option value="" disabled>
                     Select a roast or recorded run
@@ -631,6 +762,55 @@ export function EditorDialog({
                     ))}
                 </select>
               </Field>
+              <Field label="Brew preparation" wide>
+                <select
+                  name="brewId"
+                  value={tastingBrewId}
+                  onChange={(e) => setTastingBrewId(e.target.value)}
+                >
+                  <option value="">Brew conditions unknown</option>
+                  {state.brews
+                    .filter((b) => b.roastId === tastingRoastId)
+                    .map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} · {b.method} ·{" "}
+                        {new Date(b.brewedAt).toLocaleString()}
+                      </option>
+                    ))}
+                </select>
+                <small>
+                  Record a preparation in Brew log to link its recipe and
+                  equipment. Multiple tasters can use the same brew.
+                </small>
+              </Field>
+              <Field label="Blind sample code">
+                <input name="blindCode" placeholder="Optional sample label" />
+              </Field>
+              <Field label="Flavour descriptors">
+                <input
+                  name="descriptors"
+                  placeholder="e.g. peach, cocoa, floral"
+                />
+              </Field>
+              {["liking", "targetMatch"].map((k) => (
+                <Field
+                  key={k}
+                  label={
+                    k === "liking"
+                      ? "Personal liking / 5"
+                      : "Match to intended cup / 5"
+                  }
+                >
+                  <input
+                    name={k}
+                    type="number"
+                    min="1"
+                    max="5"
+                    step=".5"
+                    placeholder="Not assessed"
+                  />
+                </Field>
+              ))}
               <Field label="Taster">
                 <input name="taster" required placeholder="Your name" />
               </Field>
@@ -649,8 +829,7 @@ export function EditorDialog({
                   min="0"
                   max="100"
                   step=".25"
-                  defaultValue="85"
-                  required
+                  placeholder="Not assessed"
                 />
               </Field>
               {["aroma", "acidity", "sweetness", "body", "finish"].map((k) => (
@@ -664,8 +843,7 @@ export function EditorDialog({
                     min="0"
                     max="10"
                     step=".25"
-                    defaultValue="8"
-                    required
+                    placeholder="Not assessed"
                   />
                 </Field>
               ))}

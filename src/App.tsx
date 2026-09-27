@@ -1,3 +1,10 @@
+import { KnowledgePage, KnowledgeEvidence } from "./Knowledge";
+import {
+  BrewingPage,
+  EquipmentPage,
+  TastingContext,
+  PilotProgress,
+} from "./Brewing";
 import { cloudMode } from "./auth";
 import { RecordManager } from "./RecordManager";
 import { RunHistory } from "./RunHistory";
@@ -36,6 +43,9 @@ const pages = [
   { id: "journal", label: "Roast journal", icon: BookOpen },
   { id: "profiles", label: "Profiles", icon: SlidersHorizontal },
   { id: "experiments", label: "Experiments", icon: FlaskConical },
+  { id: "brews", label: "Brew log", icon: Coffee },
+  { id: "knowledge", label: "Knowledge library", icon: Search },
+  { id: "equipment", label: "Equipment", icon: Settings2 },
   { id: "cupping", label: "Cupping table", icon: Coffee },
   { id: "beans", label: "Green coffee", icon: Leaf },
   { id: "archive", label: "File archive", icon: FileArchive },
@@ -44,6 +54,8 @@ const pages = [
 ] as const;
 type Page = (typeof pages)[number]["id"] | "device" | "settings";
 const empty: State = {
+  brews: [],
+  equipment: [],
   deviceRuns: [],
   beans: [],
   profiles: [],
@@ -118,7 +130,7 @@ export default function App() {
       api<State>("/state"),
       api<Device>("/device"),
     ]);
-    setState(s);
+    setState({ ...empty, ...s });
     setDevice(d);
     setLoadError("");
   };
@@ -194,6 +206,8 @@ export default function App() {
       journal: "Log a roast",
       profiles: "New profile",
       experiments: "New experiment",
+      brews: "Record a brew",
+      equipment: "Add equipment",
       cupping: "Record a tasting",
       beans: "Add coffee",
       archive: "Import files",
@@ -208,6 +222,8 @@ export default function App() {
             journal: "roast",
             profiles: "profile",
             experiments: "experiment",
+            brews: "brew",
+            equipment: "equipment",
             cupping: "cupping",
             beans: "bean",
           } as Record<string, Editor["type"]>
@@ -476,6 +492,9 @@ export default function App() {
                         "A library of ideas. A clear history of every adjustment.",
                       experiments:
                         "Change one thing. Taste carefully. Keep what you learn.",
+                      brews: "Keep the recipe, equipment and result connected.",
+                      knowledge: "Public references for your next experiment.",
+                      equipment: "A named setup for every preparation.",
                       cupping: "The roast is only half the story.",
                       beans: "Know your coffee, from the first green bean.",
                       archive: "Original files, safely kept and always yours.",
@@ -1049,6 +1068,12 @@ export default function App() {
                             <span className="eyebrow">ONE THING TO CHANGE</span>
                             <strong>{e.variable}</strong>
                           </div>
+                          <KnowledgeEvidence records={e.evidence} />
+                          <PilotProgress
+                            experiment={e}
+                            state={state}
+                            onEdit={setEditor}
+                          />
                           <h3>{runs.length} linked roasts</h3>
                           {runs.map((r) => (
                             <button
@@ -1102,6 +1127,27 @@ export default function App() {
                     to see what changes in the cup.
                   </Empty>
                 ))}
+              {page === "brews" && (
+                <BrewingPage state={state} onEdit={setEditor} />
+              )}
+              {page === "knowledge" && <KnowledgePage onEdit={setEditor} />}
+              {page === "equipment" && <EquipmentPage state={state} />}
+              {page === "experiments" && (
+                <section className="panel padded">
+                  <h2>Plan a controlled comparison</h2>
+                  <p>
+                    Three lots, one roast choice per lot, and a repeated
+                    reference: nine batches to start learning from consistent
+                    preparations.
+                  </p>
+                  <button
+                    className="button"
+                    onClick={() => setEditor({ type: "pilot" })}
+                  >
+                    Plan nine-batch pilot
+                  </button>
+                </section>
+              )}
               {page === "cupping" && (
                 <>
                   {pending.length > 0 && (
@@ -1156,6 +1202,7 @@ export default function App() {
                             </div>
                           </div>
                           <p>{c.notes || "No tasting notes recorded."}</p>
+                          <TastingContext cup={c} state={state} />
                           <div className="taste-bars">
                             {(
                               [

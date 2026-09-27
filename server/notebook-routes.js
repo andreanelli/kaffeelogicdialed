@@ -1,3 +1,9 @@
+import { registerKnowledgeRoutes, evidenceFor } from "./knowledge.js";
+import {
+  registerBrewingRoutes,
+  resolveRoast,
+  checkPilotTrial,
+} from "./brewing.js";
 import { syncRoastRun, notebookRuns } from "./roast-runs.js";
 import { registerRecordRoutes } from "./records.js";
 import { registerImportRoutes } from "./import-routes.js";
@@ -23,16 +29,19 @@ export function registerNotebookRoutes(
     if (!value) throw fail(`${kind} not found`, 404);
     return value;
   };
+  registerKnowledgeRoutes(app);
+  registerBrewingRoutes(app, store);
   registerImportRoutes(app, store);
   registerRecordRoutes(app, store);
   app.get("/api/health", (_, res) => res.json({ ok: true }));
   app.get("/api/state", (_, res) =>
     res.json(
       Object.fromEntries(
-        ["bean", "profile", "version", "roast", "cupping", "experiment"]
+        ["bean", "profile", "version", "roast", "cupping", "experiment", "brew"]
           .map((k) => [k + "s", store.list(k)])
           .concat([
             ["files", listFiles(store)],
+            ["equipment", store.list("equipment")],
             ["deviceRuns", notebookRuns(store)],
           ]),
       ),
@@ -60,6 +69,10 @@ export function registerNotebookRoutes(
             d.experimentId,
             d.roastId,
             d.versionId,
+            d.brewId,
+            d.brewerId,
+            d.grinderId,
+            ...(d.pilot?.lotIds || []),
           ];
         }),
     );
@@ -181,6 +194,7 @@ export function registerNotebookRoutes(
   app.post("/api/roasts", (req, res) => {
     const data = roastSchema.parse(req.body);
     checkRoast(data);
+    checkPilotTrial(store, data);
     res.status(201).json(
       store.transaction(() => {
         const bean = need(data.beanId, "bean");
@@ -207,6 +221,17 @@ export function registerNotebookRoutes(
     const old = need(req.params.id, "roast");
     const data = roastSchema.parse(req.body);
     checkRoast(data);
+    checkPilotTrial(store, data, old.id);
+    if (
+      store.list("brew").some((b) => b.roastId === old.id) &&
+      ["beanId", "profileVersionId", "roastedAt"].some(
+        (k) => old[k] !== data[k],
+      )
+    )
+      throw fail(
+        "This roast has brews. Its coffee, profile revision and roast time must stay unchanged to preserve tasting history.",
+        409,
+      );
     res.json(
       store.transaction(() => {
         // Sample roasts did not consume stock when seeded.
@@ -249,26 +274,39 @@ export function registerNotebookRoutes(
   });
   app.post("/api/cuppings", (req, res) => {
     const data = cuppingSchema.parse(req.body);
-    if (!store.get(data.roastId, "roast")) {
-      const run = need(data.roastId, "deviceRun");
-      const linked = store
-        .list("roast")
-        .find((r) => run.files.some((f) => f.id === r.fileId));
-      if (linked) data.roastId = linked.id;
+    data.roastId = resolveRoast(store, data.roastId).id;
+    if (data.brewId) {
+      const brew = need(data.brewId, "brew");
+      if (brew.roastId !== data.roastId)
+        throw fail("Tasting and brew must refer to the same roast");
+      if (Date.parse(data.tastedAt) < Date.parse(brew.brewedAt))
+        throw fail("Tasting time must not precede brewing");
     }
     res.status(201).json(store.put("cupping", data));
   });
-  app.post("/api/experiments", (req, res) =>
-    res
-      .status(201)
-      .json(store.put("experiment", experimentSchema.parse(req.body))),
-  );
+  app.post("/api/experiments", (req, res) => {
+    const data = experimentSchema.parse(req.body);
+    res.status(201).json(
+      store.put("experiment", {
+        ...data,
+        evidence: evidenceFor(data.referenceIds),
+      }),
+    );
+  });
   app.put("/api/experiments/:id", (req, res) => {
     const old = need(req.params.id, "experiment");
+    const data = experimentSchema.parse(req.body);
+    if (req.body.referenceIds === undefined)
+      data.referenceIds = old.referenceIds || [];
     res.json(
       store.put(
         "experiment",
-        { ...old, ...experimentSchema.parse(req.body), demo: false },
+        {
+          ...old,
+          ...data,
+          evidence: evidenceFor(data.referenceIds, old.evidence || []),
+          demo: false,
+        },
         old.id,
       ),
     );

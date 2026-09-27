@@ -1,3 +1,4 @@
+import type { KnowledgeRecord } from "./Knowledge";
 export type Point = { time: number; temperature: number; fan?: number };
 export type Base = { id: string; createdAt: string; demo?: boolean };
 export type Bean = Base & {
@@ -30,6 +31,7 @@ export type Roast = Base & {
   beanId: string;
   profileVersionId: string;
   experimentId: string | null;
+  pilotTrialId?: string | null;
   roastedAt: string;
   greenWeight: number;
   roastedWeight: number;
@@ -43,6 +45,12 @@ export type Roast = Base & {
   source?: { kind: string; timingNote?: string };
 };
 export type Cupping = Base & {
+  brewId?: string | null;
+  protocolVersion?: string;
+  descriptors?: string;
+  blindCode?: string;
+  liking?: number | null;
+  targetMatch?: number | null;
   roastId: string;
   taster: string;
   tastedAt: string;
@@ -55,11 +63,22 @@ export type Cupping = Base & {
   notes: string;
 };
 export type Experiment = Base & {
+  referenceIds?: string[];
+  evidence?: KnowledgeRecord[];
   name: string;
   hypothesis: string;
   variable: string;
   status: "planned" | "active" | "complete";
   conclusion: string;
+  pilot?: {
+    target: string;
+    method: string;
+    batchSizeG: number;
+    restHours: number;
+    controls: string;
+    lotIds: string[];
+    trials: { id: string; beanId: string; condition: string }[];
+  };
 };
 export type ArchiveFile = {
   id: string;
@@ -80,6 +99,8 @@ export type DeviceRun = Base & {
   files: { id: string; name: string; sha256: string }[];
 };
 export type State = {
+  brews: Brew[];
+  equipment: Equipment[];
   deviceRuns: DeviceRun[];
   beans: Bean[];
   profiles: Profile[];
@@ -96,4 +117,41 @@ export type Device = {
   profiles: { id: string; name: string; versionId: string; syncedAt: string }[];
   jobs: { id: string; name: string; status: string; completedAt: string }[];
   folder: { canImport: boolean; canStage: boolean };
+};
+
+export type Equipment = Base & {
+  name: string;
+  category: "brewer" | "grinder" | "roaster" | "scale" | "other";
+  brand: string;
+  model: string;
+  configuration: string;
+  calibration: string;
+};
+export type Brew = Base & {
+  name: string;
+  roastId: string;
+  brewedAt: string;
+  method: string;
+  brewerId: string | null;
+  grinderId: string | null;
+  equipmentSnapshot: { brewer: Equipment | null; grinder: Equipment | null };
+  grindSetting: string;
+  filter: string;
+  doseG: number | null;
+  waterInputG: number | null;
+  beverageYieldG: number | null;
+  bypassWaterG: number | null;
+  temperatureC: number | null;
+  temperatureLocation: string;
+  durationS: number | null;
+  timingOrigin: string;
+  pressureBar: number | null;
+  waterSource: string;
+  hardnessMgLCaCO3: number | null;
+  alkalinityMgLCaCO3: number | null;
+  tdsPercent: number | null;
+  storage: string;
+  protocol: string;
+  notes: string;
+  restHours: number | null;
 };

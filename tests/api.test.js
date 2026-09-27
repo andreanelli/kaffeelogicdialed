@@ -607,3 +607,341 @@ test("existing manual roasts appear in run history without changing inventory", 
   );
   assert.equal(s.get(p.bean.id, "bean").stock, 1000);
 });
+
+test("brews preserve equipment and unknown values; tastings validate their brew and roast", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const r = (
+    await request("/roasts", {
+      ...roast(p.bean, p.version),
+      roastedAt: "2026-09-01T08:00:00Z",
+    })
+  ).data;
+  const brewer = (
+    await request("/equipment", {
+      name: "V60 kitchen",
+      category: "brewer",
+      brand: "Hario",
+      model: "V60",
+      configuration: "Plastic 02",
+    })
+  ).data;
+  const grinder = (
+    await request("/equipment", {
+      name: "Hand grinder",
+      category: "grinder",
+      brand: "Comandante",
+      model: "C40",
+      configuration: "Standard axle",
+      calibration: "Burr touch zero",
+    })
+  ).data;
+  const input = {
+    name: "Reference brew",
+    roastId: r.id,
+    brewedAt: "2026-09-04T08:00:00Z",
+    method: "pour-over",
+    brewerId: brewer.id,
+    grinderId: grinder.id,
+    doseG: 15,
+    waterInputG: 250,
+  };
+  const result = await request("/brews", input);
+  assert.equal(result.status, 201);
+  assert.equal(result.data.restHours, 72);
+  assert.equal(result.data.beverageYieldG, null);
+  assert.equal(result.data.tdsPercent, null);
+  s.put("equipment", { ...grinder, configuration: "Changed" }, grinder.id);
+  assert.equal(
+    s.get(result.data.id, "brew").equipmentSnapshot.grinder.configuration,
+    "Standard axle",
+  );
+  assert.equal(
+    (await request("/brews", { ...input, brewerId: grinder.id })).status,
+    400,
+  );
+  assert.equal(
+    (await request("/brews", { ...input, grinderId: "missing" })).status,
+    404,
+  );
+  assert.equal(
+    (await request("/brews", { ...input, brewedAt: "2026-08-01T08:00:00Z" }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await request("/brews", { ...input, bypassWaterG: 300 })).status,
+    400,
+  );
+  assert.equal((await request("/brews", { ...input, doseG: 0 })).status, 400);
+  const cup = {
+    roastId: r.id,
+    brewId: result.data.id,
+    taster: "Taster",
+    tastedAt: "2026-09-04T08:10:00Z",
+    liking: 4,
+    targetMatch: 3,
+    descriptors: "peach",
+    blindCode: "A",
+  };
+  const c = await request("/cuppings", cup);
+  assert.equal(c.status, 201);
+  assert.equal(c.data.score, null);
+  assert.equal(c.data.aroma, null);
+  assert.equal(
+    (await request("/cuppings", { ...cup, taster: "Second taster" })).status,
+    201,
+  );
+  assert.equal(
+    (await request("/cuppings", { ...cup, tastedAt: "2026-09-03T08:10:00Z" }))
+      .status,
+    400,
+  );
+  const r2 = (await request("/roasts", roast(p.bean, p.version))).data;
+  assert.equal(
+    (await request("/cuppings", { ...cup, roastId: r2.id })).status,
+    400,
+  );
+  assert.equal(
+    (await request("/cuppings", { ...cup, brewId: "missing" })).status,
+    404,
+  );
+  assert.equal(
+    (await request(`/records/brew/${result.data.id}`, undefined, "DELETE"))
+      .status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/equipment/${brewer.id}`, undefined, "DELETE"))
+      .status,
+    409,
+  );
+  assert.equal(
+    (await request(`/records/roast/${r.id}`, undefined, "DELETE")).status,
+    409,
+  );
+  assert.equal(
+    (
+      await request(
+        `/roasts/${r.id}`,
+        { ...r, roastedAt: "2026-09-02T08:00:00Z" },
+        "PUT",
+      )
+    ).status,
+    409,
+  );
+  const backup = (await request("/backup")).data;
+  assert.ok(
+    backup.records.some(
+      (x) => x.kind === "brew" && x.data.id === result.data.id,
+    ),
+  );
+  const state = (await request("/state")).data;
+  assert.equal(state.brews.length, 1);
+  assert.equal(state.equipment.length, 2);
+});
+
+test("pilot planning creates no observations or stock changes, checks slots and protects lots", async (t) => {
+  const { request } = await setup(t);
+  const p = await prerequisites(request);
+  const lotIds = [p.bean.id];
+  for (const name of ["Second", "Third"])
+    lotIds.push(
+      (
+        await request("/beans", {
+          name,
+          origin: "Test",
+          process: "Washed",
+          stock: 1000,
+        })
+      ).data.id,
+    );
+  const body = {
+    name: "Pilot",
+    lotIds,
+    target: "Sweet peach; match at least 4/5",
+    method: "pour-over",
+    batchSizeG: 100,
+    restHours: 72,
+    controls: "Same recipe and water. Compare levels on one revision.",
+  };
+  assert.equal(
+    (
+      await request("/experiments/pilot", {
+        ...body,
+        lotIds: [lotIds[0], lotIds[0], lotIds[1]],
+      })
+    ).status,
+    400,
+  );
+  const pilot = await request("/experiments/pilot", body);
+  assert.equal(pilot.status, 201);
+  assert.equal(pilot.data.pilot.trials.length, 9);
+  let state = (await request("/state")).data;
+  assert.equal(state.roasts.length, 0);
+  assert.equal(state.brews.length, 0);
+  assert.ok(state.beans.every((b) => b.stock === 1000));
+  assert.equal(
+    (await request(`/records/bean/${lotIds[1]}`, undefined, "DELETE")).status,
+    409,
+  );
+  const trial = {
+    ...roast(p.bean, p.version),
+    experimentId: pilot.data.id,
+    pilotTrialId: "1-1",
+  };
+  assert.equal(
+    (await request("/roasts", { ...trial, pilotTrialId: "2-1" })).status,
+    400,
+  );
+  assert.equal((await request("/roasts", trial)).status, 201);
+  assert.equal((await request("/roasts", trial)).status, 409);
+  state = (await request("/state")).data;
+  assert.equal(state.beans.find((b) => b.id === p.bean.id).stock, 900);
+});
+
+test("attaching a log retains both brew and tasting links even when the run ID is reused", async (t) => {
+  const { s, request } = await setup(t);
+  const p = await prerequisites(request);
+  const file = archiveFile(s, "history.json", Buffer.from("{}"));
+  const run = s.put("deviceRun", {
+    name: "Native run",
+    roastedAt: "2026-09-01T08:00:00Z",
+    files: [{ id: file.id, name: "history.json" }],
+    category: "recorded",
+  });
+  const b = await request("/brews", {
+    name: "Cup",
+    method: "cupping",
+    roastId: run.id,
+    brewedAt: "2026-09-02T08:00:00Z",
+  });
+  assert.equal(b.status, 201);
+  const c = await request("/cuppings", {
+    roastId: run.id,
+    brewId: b.data.id,
+    taster: "A",
+    tastedAt: "2026-09-02T08:15:00Z",
+  });
+  assert.equal(c.status, 201);
+  const r = await request("/roasts", {
+    ...roast(p.bean, p.version),
+    roastedAt: "2026-09-01T08:00:00Z",
+    fileId: file.id,
+  });
+  assert.equal(r.status, 201);
+  assert.equal(s.get(b.data.id, "brew").roastId, r.data.id);
+  assert.equal(s.get(c.data.id, "cupping").roastId, r.data.id);
+  assert.equal(
+    (
+      await request("/cuppings", {
+        roastId: r.data.id,
+        brewId: b.data.id,
+        taster: "B",
+        tastedAt: "2026-09-02T08:20:00Z",
+      })
+    ).status,
+    201,
+  );
+});
+
+test("a pilot referencing sample lots blocks cleanup until the unused plan is removed", async (t) => {
+  const { request } = await setup(t);
+  await request("/demo", {});
+  const state = (await request("/state")).data;
+  const plan = await request("/experiments/pilot", {
+    name: "Real plan",
+    lotIds: state.beans.slice(0, 3).map((b) => b.id),
+    target: "Test target",
+    method: "cupping",
+    batchSizeG: 100,
+    restHours: 48,
+    controls: "Same recipe",
+  });
+  assert.equal(plan.status, 201);
+  assert.equal((await request("/demo", undefined, "DELETE")).status, 409);
+  assert.equal(
+    (await request(`/records/experiment/${plan.data.id}`, undefined, "DELETE"))
+      .status,
+    200,
+  );
+  assert.equal((await request("/demo", undefined, "DELETE")).status, 200);
+});
+
+test("knowledge search separates leads and persists trusted experiment evidence", async (t) => {
+  const { request, s } = await setup(t);
+  const metadata = await request("/knowledge");
+  assert.deepEqual(metadata.data.counts, {
+    curated: 37,
+    discovery: 7,
+    sources: 30,
+  });
+  const browse = await request("/knowledge/search", {});
+  assert.equal(browse.data.results.length, 37);
+  const all = await request("/knowledge/search", { includeDiscovery: true });
+  assert.equal(all.data.results.length, 44);
+  const first = browse.data.results[0];
+  const filtered = await request("/knowledge/search", {
+    sourceId: first.sourceId,
+    kind: first.kind,
+  });
+  assert.ok(filtered.data.results.length);
+  assert.ok(
+    filtered.data.results.every(
+      (r) => r.sourceId === first.sourceId && r.kind === first.kind,
+    ),
+  );
+  assert.equal(
+    (await request("/knowledge/search", { query: "zzzznonsense" })).data.results
+      .length,
+    0,
+  );
+  assert.equal(
+    (await request("/knowledge/search", { densityGL: 725 })).data.results
+      .length,
+    2,
+  );
+  assert.equal(
+    (await request("/knowledge/search", { densityGL: -2 })).status,
+    400,
+  );
+  const draft = {
+    name: "Reference trial",
+    hypothesis: "Test sweetness",
+    variable: "Roast level",
+    status: "planned",
+    conclusion: "",
+    referenceIds: [first.id],
+  };
+  const created = await request("/experiments", draft);
+  assert.equal(created.status, 201);
+  assert.equal(created.data.evidence[0].source.url, first.source.url);
+  assert.deepEqual(created.data.evidence[0].fields, first.fields);
+  const legacyUpdate = { ...draft };
+  delete legacyUpdate.referenceIds;
+  const updated = await request(
+    "/experiments/" + created.data.id,
+    legacyUpdate,
+    "PUT",
+  );
+  assert.deepEqual(updated.data.evidence, created.data.evidence);
+  assert.equal(s.list("roast").length, 0);
+  assert.equal(s.list("brew").length, 0);
+  const lead = all.data.results.find((r) => r.status === "discovery");
+  assert.equal(
+    (await request("/experiments", { ...draft, referenceIds: [lead.id] }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await request("/experiments", { ...draft, referenceIds: ["invented"] }))
+      .status,
+    400,
+  );
+  const removed = await request(
+    "/experiments/" + created.data.id,
+    { ...draft, referenceIds: [] },
+    "PUT",
+  );
+  assert.deepEqual(removed.data.evidence, []);
+});

@@ -1,0 +1,968 @@
+[
+  {
+    "id": "variety-bourbon",
+    "sourceId": "wcr-bourbon",
+    "kind": "variety",
+    "title": "Bourbon",
+    "summary": "WCR describes Bourbon as a tall Arabica variety with a Bourbon-like genetic background.",
+    "fields": {
+      "species": "Coffea arabica",
+      "geneticGroup": "Bourbon related",
+      "beanSize": "average"
+    },
+    "tags": ["Bourbon", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-sl28",
+    "sourceId": "wcr-sl28",
+    "kind": "variety",
+    "title": "SL28",
+    "summary": "WCR identifies SL28 as Bourbon-related, selected from Tanganyika Drought Resistant material.",
+    "fields": {
+      "species": "Coffea arabica",
+      "geneticGroup": "Bourbon related",
+      "aliases": ["SL 28", "SL-28"]
+    },
+    "tags": ["SL28", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-caturra",
+    "sourceId": "wcr-caturra",
+    "kind": "variety",
+    "title": "Caturra",
+    "summary": "Caturra arose as a natural mutation of Bourbon; its compact growth reflects a single-gene mutation.",
+    "fields": {
+      "species": "Coffea arabica",
+      "parents": ["Bourbon"],
+      "relationship": "natural mutation"
+    },
+    "tags": ["Caturra", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-geisha-panama",
+    "sourceId": "wcr-geisha-panama",
+    "kind": "variety",
+    "title": "Geisha (Panama)",
+    "summary": "WCR distinguishes the T2722-derived Panamanian population from other plants also called Gesha or Geisha. Floral, jasmine and peach aromas are associated with suitable growing conditions.",
+    "fields": {
+      "species": "Coffea arabica",
+      "accession": "T2722",
+      "aliases": ["Gesha"],
+      "reportedDescriptors": ["floral", "jasmine", "peach"]
+    },
+    "tags": ["Geisha (Panama)", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-pacamara",
+    "sourceId": "wcr-pacamara",
+    "kind": "variety",
+    "title": "Pacamara",
+    "summary": "Pacamara derives from Pacas crossed with Maragogipe. WCR describes very large beans and a population that is not genetically stable across generations.",
+    "fields": {
+      "species": "Coffea arabica",
+      "parents": ["Pacas", "Maragogipe"],
+      "beanSize": "very large"
+    },
+    "tags": ["Pacamara", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-mundo-novo",
+    "sourceId": "wcr-mundo-novo",
+    "kind": "variety",
+    "title": "Mundo Novo",
+    "summary": "Mundo Novo originated as a natural cross between Typica and Bourbon in Brazil.",
+    "fields": {
+      "species": "Coffea arabica",
+      "parents": ["Typica", "Bourbon"]
+    },
+    "tags": ["Mundo Novo", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "variety-catuai",
+    "sourceId": "wcr-catuai",
+    "kind": "variety",
+    "title": "Catuai",
+    "summary": "Catuai is a compact Arabica cultivar from Mundo Novo crossed with Caturra; red- and yellow-fruited selections exist.",
+    "fields": {
+      "species": "Coffea arabica",
+      "parents": ["Mundo Novo", "Caturra"],
+      "aliases": ["Catuaí"]
+    },
+    "tags": ["Catuai", "variety", "arabica"],
+    "limitations": [
+      "Variety-level information does not establish a purchased lot’s identity or cup result."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "process-dry-process",
+    "sourceId": "sm-dry-process",
+    "kind": "process",
+    "title": "Natural / dry process",
+    "summary": "Whole coffee cherries are dried before the dried fruit layers are removed.",
+    "fields": {
+      "process": "natural",
+      "aliases": ["dry process"],
+      "dryingState": "whole cherry"
+    },
+    "tags": ["natural", "process"],
+    "limitations": [
+      "A process name alone does not specify fermentation temperature, duration, inoculum or oxygen exposure."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "process-wet-process",
+    "sourceId": "sm-wet-process",
+    "kind": "process",
+    "title": "Washed / wet process",
+    "summary": "The described washed process removes cherry skin, breaks down mucilage, washes it away and dries coffee in parchment.",
+    "fields": {
+      "process": "washed",
+      "aliases": ["wet process"],
+      "dryingState": "parchment"
+    },
+    "tags": ["washed", "process"],
+    "limitations": [
+      "A process name alone does not specify fermentation temperature, duration, inoculum or oxygen exposure."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "process-honey-process",
+    "sourceId": "sm-honey-process",
+    "kind": "process",
+    "title": "Honey / pulp natural",
+    "summary": "Honey processing removes cherry skin while retaining mucilage during drying.",
+    "fields": {
+      "process": "honey",
+      "aliases": ["pulp natural"],
+      "dryingState": "parchment with mucilage"
+    },
+    "tags": ["honey", "process"],
+    "limitations": [
+      "A process name alone does not specify fermentation temperature, duration, inoculum or oxygen exposure."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "lot-brazil-2025",
+    "sourceId": "rr-brazil",
+    "kind": "lot",
+    "title": "Brazil Catuai & Bourbon Santos — 2025",
+    "summary": "Vendor-reported green coffee offer; sensory descriptors are vendor claims, not a Dialed tasting.",
+    "fields": {
+      "country": "Brazil",
+      "region": "Alta Mogiana",
+      "producer": "Fazenda El Dorado",
+      "varieties": ["Yellow Catuai", "Mundo Novo", "Bourbon"],
+      "process": "natural",
+      "altitudeM": [1080, 1270],
+      "harvestYear": 2025,
+      "densityGL": 690,
+      "densityMethod": "ISO (specific standard not supplied)",
+      "moisturePercent": 9.3,
+      "waterActivity": 0.5,
+      "vendorDescriptors": ["chocolate", "tropical fruit", "almond"],
+      "supplierLotId": null
+    },
+    "tags": [
+      "Brazil",
+      "natural",
+      "Yellow Catuai",
+      "Mundo Novo",
+      "Bourbon",
+      "chocolate",
+      "tropical fruit",
+      "almond"
+    ],
+    "limitations": [
+      "Offer snapshot; supplier lot ID and measurement date are unknown. Reconfirm against the purchased bag.",
+      "Missing values remain null; do not infer them from altitude."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-claim",
+    "version": 1
+  },
+  {
+    "id": "lot-kenya-2025",
+    "sourceId": "rr-kenya",
+    "kind": "lot",
+    "title": "Kenya washed SL-28 — 2025",
+    "summary": "Vendor-reported green coffee offer; sensory descriptors are vendor claims, not a Dialed tasting.",
+    "fields": {
+      "country": "Kenya",
+      "region": "Kirinyaga / Kariti",
+      "producer": "Kibirigwi Farmers Cooperative",
+      "varieties": ["SL-28"],
+      "process": "washed",
+      "altitudeM": [1495, 1495],
+      "harvestYear": 2025,
+      "densityGL": 747,
+      "densityMethod": "ISO (specific standard not supplied)",
+      "moisturePercent": 9.2,
+      "waterActivity": 0.51,
+      "vendorDescriptors": ["rosehip", "orange", "cranberry"],
+      "supplierLotId": null
+    },
+    "tags": ["Kenya", "washed", "SL-28", "rosehip", "orange", "cranberry"],
+    "limitations": [
+      "Offer snapshot; supplier lot ID and measurement date are unknown. Reconfirm against the purchased bag.",
+      "Missing values remain null; do not infer them from altitude."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-claim",
+    "version": 1
+  },
+  {
+    "id": "lot-sidamo-2025",
+    "sourceId": "rr-sidamo",
+    "kind": "lot",
+    "title": "Ethiopia Sidamo — 2025",
+    "summary": "Vendor-reported green coffee offer; sensory descriptors are vendor claims, not a Dialed tasting.",
+    "fields": {
+      "country": "Ethiopia",
+      "region": "Sidamo",
+      "producer": "Sidama Coffee Farmers Cooperative Union",
+      "varieties": ["Heirloom"],
+      "process": "washed",
+      "altitudeM": [1750, 2200],
+      "harvestYear": 2025,
+      "densityGL": 740,
+      "densityMethod": "ISO (specific standard not supplied)",
+      "moisturePercent": 10.3,
+      "waterActivity": 0.54,
+      "vendorDescriptors": ["chocolate", "peach", "berries"],
+      "supplierLotId": null
+    },
+    "tags": ["Ethiopia", "washed", "Heirloom", "chocolate", "peach", "berries"],
+    "limitations": [
+      "Offer snapshot; supplier lot ID and measurement date are unknown. Reconfirm against the purchased bag.",
+      "Missing values remain null; do not infer them from altitude."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-claim",
+    "version": 1
+  },
+  {
+    "id": "lot-colombia-2026",
+    "sourceId": "rr-colombia",
+    "kind": "lot",
+    "title": "Colombia San Sebastian — 2026",
+    "summary": "Vendor-reported green coffee offer; sensory descriptors are vendor claims, not a Dialed tasting.",
+    "fields": {
+      "country": "Colombia",
+      "region": "Cauca / Inzá",
+      "producer": "Smallholder farmers in Inzá",
+      "varieties": ["Caturra", "Castillo"],
+      "process": "washed",
+      "altitudeM": [1700, 2000],
+      "harvestYear": 2026,
+      "densityGL": null,
+      "densityMethod": null,
+      "moisturePercent": null,
+      "waterActivity": null,
+      "vendorDescriptors": ["green apple", "orange", "caramel"],
+      "supplierLotId": null
+    },
+    "tags": [
+      "Colombia",
+      "washed",
+      "Caturra",
+      "Castillo",
+      "green apple",
+      "orange",
+      "caramel"
+    ],
+    "limitations": [
+      "Offer snapshot; supplier lot ID and measurement date are unknown. Reconfirm against the purchased bag.",
+      "Missing values remain null; do not infer them from altitude."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-claim",
+    "version": 1
+  },
+  {
+    "id": "lot-venecia-2025",
+    "sourceId": "cofi-venecia",
+    "kind": "lot",
+    "title": "Venecia Honey — 2025",
+    "summary": "Exporter lists a honey-processed Venecia lot from El Arrempujón, Coto Brus.",
+    "fields": {
+      "country": "Costa Rica",
+      "region": "Brunca / Coto Brus",
+      "producer": null,
+      "mill": "El Arrempujón",
+      "varieties": ["Venecia"],
+      "process": "honey",
+      "altitudeM": [1300, 1300],
+      "harvestYear": 2025,
+      "densityGL": null,
+      "moisturePercent": null,
+      "waterActivity": null,
+      "supplierLotId": "AEA-VEN-H-2025",
+      "vendorDescriptors": [
+        "mandarin",
+        "peach",
+        "caramel",
+        "cacao",
+        "sugarcane honey"
+      ]
+    },
+    "tags": ["Costa Rica", "honey", "Venecia", "peach", "caramel"],
+    "limitations": [
+      "Exporter sensory claims have no linked roast or brew measurements."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-claim",
+    "version": 1
+  },
+  {
+    "id": "profile-explorer",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "KL Explorer",
+    "summary": "Kaffelogic presents Explorer as a default starting profile derived from Classic.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7"
+    },
+    "tags": ["Kaffelogic", "KL Explorer"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-washed",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "KL Washed",
+    "summary": "Kaffelogic offers a processing-specific starting profile for washed coffee.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "process": "washed"
+    },
+    "tags": ["Kaffelogic", "KL Washed", "washed"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-natural",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "KL Natural",
+    "summary": "Kaffelogic offers a processing-specific starting profile for natural coffee.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "process": "natural"
+    },
+    "tags": ["Kaffelogic", "KL Natural", "natural"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-rtd",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "RTD profiles",
+    "summary": "Designed for brewing shortly after roasting; the manufacturer describes a typical flavour window of two to three days.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "restDays": [0, 3]
+    },
+    "tags": ["Kaffelogic", "RTD profiles"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-rest",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "REST profiles",
+    "summary": "The manufacturer describes REST profiles as intended for drinking after roughly three to five days.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "restDays": [3, 5]
+    },
+    "tags": ["Kaffelogic", "REST profiles"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-cupping",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "Cupping profile",
+    "summary": "Designed for immersion assessment of origin character and defects.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "brewMethod": "cupping"
+    },
+    "tags": ["Kaffelogic", "Cupping profile"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-classic",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "KL Classic",
+    "summary": "Classic is positioned as a medium-to-dark starting profile. The documented example maps level 3 to a 227°C endpoint.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "exampleLevel": 3,
+      "exampleEndTemperatureC": 227
+    },
+    "tags": ["Kaffelogic", "KL Classic"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-decaf",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "Decaf profile",
+    "summary": "A manufacturer profile intended for decaffeinated coffee.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "decaffeinated": true
+    },
+    "tags": ["Kaffelogic", "Decaf profile"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-robusta",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "Robusta profile",
+    "summary": "A manufacturer profile intended for robusta coffee.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "species": "Coffea canephora"
+    },
+    "tags": ["Kaffelogic", "Robusta profile"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "profile-super-dark",
+    "sourceId": "kl-profiles",
+    "kind": "roast-guidance",
+    "title": "Super Dark profile",
+    "summary": "A manufacturer option for dark, smoky, high-body preferences.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "reportedDescriptors": ["smoky", "high body"]
+    },
+    "tags": ["Kaffelogic", "Super Dark profile"],
+    "limitations": [
+      "Guidance only: no native profile bytes, revision, measured curve or verified outcome is included."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "density-low",
+    "sourceId": "rr-profile-guide",
+    "kind": "roast-guidance",
+    "title": "0 - 1200m REST density heuristic",
+    "summary": "Vendor suggests this profile family for the stated green-coffee bulk-density band.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "profileName": "0 - 1200m REST",
+      "densityGLMin": null,
+      "densityGLMax": 700
+    },
+    "tags": ["Kaffelogic", "REST", "density", "0 - 1200m REST"],
+    "limitations": [
+      "Vendor heuristic, not a causal model. Published boundaries overlap; retain both candidates at a boundary.",
+      "Density measurement methods must be comparable. Profile altitude label is not a measured density."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-guidance",
+    "version": 1
+  },
+  {
+    "id": "density-mid",
+    "sourceId": "rr-profile-guide",
+    "kind": "roast-guidance",
+    "title": "1200 - 1500m REST density heuristic",
+    "summary": "Vendor suggests this profile family for the stated green-coffee bulk-density band.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "profileName": "1200 - 1500m REST",
+      "densityGLMin": 700,
+      "densityGLMax": 725
+    },
+    "tags": ["Kaffelogic", "REST", "density", "1200 - 1500m REST"],
+    "limitations": [
+      "Vendor heuristic, not a causal model. Published boundaries overlap; retain both candidates at a boundary.",
+      "Density measurement methods must be comparable. Profile altitude label is not a measured density."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-guidance",
+    "version": 1
+  },
+  {
+    "id": "density-high",
+    "sourceId": "rr-profile-guide",
+    "kind": "roast-guidance",
+    "title": "1500 - 2000m REST density heuristic",
+    "summary": "Vendor suggests this profile family for the stated green-coffee bulk-density band.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "profileName": "1500 - 2000m REST",
+      "densityGLMin": 725,
+      "densityGLMax": 750
+    },
+    "tags": ["Kaffelogic", "REST", "density", "1500 - 2000m REST"],
+    "limitations": [
+      "Vendor heuristic, not a causal model. Published boundaries overlap; retain both candidates at a boundary.",
+      "Density measurement methods must be comparable. Profile altitude label is not a measured density."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-guidance",
+    "version": 1
+  },
+  {
+    "id": "density-very-high",
+    "sourceId": "rr-profile-guide",
+    "kind": "roast-guidance",
+    "title": "2000 - 2700m REST density heuristic",
+    "summary": "Vendor suggests this profile family for the stated green-coffee bulk-density band.",
+    "fields": {
+      "roasterFamily": "Kaffelogic Nano 7",
+      "profileName": "2000 - 2700m REST",
+      "densityGLMin": 750,
+      "densityGLMax": null
+    },
+    "tags": ["Kaffelogic", "REST", "density", "2000 - 2700m REST"],
+    "limitations": [
+      "Vendor heuristic, not a causal model. Published boundaries overlap; retain both candidates at a boundary.",
+      "Density measurement methods must be comparable. Profile altitude label is not a measured density."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-guidance",
+    "version": 1
+  },
+  {
+    "id": "roast-bracketing",
+    "sourceId": "rr-profile-guide",
+    "kind": "experiment-guidance",
+    "title": "Compare roast levels",
+    "summary": "The vendor proposes comparing several roast levels on the same profile and refining around the preferred result.",
+    "fields": {
+      "variable": "roast level"
+    },
+    "tags": ["Kaffelogic", "experiment", "roast level", "bracketing"],
+    "limitations": [
+      "Use an appropriate range for the actual profile and hardware."
+    ],
+    "status": "curated",
+    "evidenceType": "vendor-guidance",
+    "version": 1
+  },
+  {
+    "id": "recipe-origin-v60",
+    "sourceId": "origin-v60",
+    "kind": "brew-recipe",
+    "title": "Origin ceramic Hario V60",
+    "summary": "A published pour-over recipe with four timed pours and a medium grind.",
+    "fields": {
+      "brewMethod": "pour-over",
+      "brewer": "Hario V60",
+      "material": "ceramic",
+      "doseG": 15,
+      "waterInputG": 250,
+      "waterInputMl": 250,
+      "beverageYieldG": null,
+      "kettleSetpointC": 97,
+      "reportedExtractionTemperatureC": [93, 96],
+      "durationS": [180, 210],
+      "grindDescription": "medium",
+      "grinderModel": null,
+      "filter": "V60 paper",
+      "pours": [
+        {
+          "startS": 0,
+          "cumulativeWaterG": 45
+        },
+        {
+          "startS": 30,
+          "cumulativeWaterG": 100
+        },
+        {
+          "startS": 60,
+          "cumulativeWaterG": 150
+        },
+        {
+          "startS": 90,
+          "cumulativeWaterG": 250
+        }
+      ]
+    },
+    "tags": ["V60", "Hario", "pour-over", "recipe"],
+    "limitations": [
+      "Source gives 250 ml in its summary and 250 g on the scale in its steps; both are retained.",
+      "No coffee lot, grinder model, water chemistry or observed tasting result."
+    ],
+    "status": "curated",
+    "evidenceType": "published-recipe",
+    "version": 1
+  },
+  {
+    "id": "recipe-lm-espresso",
+    "sourceId": "lm-espresso",
+    "kind": "brew-recipe",
+    "title": "La Marzocco espresso starting recipe",
+    "summary": "Manufacturer example uses a 1:2 dose-to-beverage mass ratio.",
+    "fields": {
+      "brewMethod": "espresso",
+      "brewer": "La Marzocco",
+      "brewerModel": null,
+      "doseG": 18,
+      "waterInputG": null,
+      "beverageYieldG": 36,
+      "temperatureSetpointC": 93,
+      "durationS": [25, 35],
+      "basketNominalG": 17,
+      "grinderModel": null
+    },
+    "tags": ["espresso", "La Marzocco", "recipe"],
+    "limitations": [
+      "A worked example, not a universal optimum or a specific machine calibration."
+    ],
+    "status": "curated",
+    "evidenceType": "published-recipe",
+    "version": 1
+  },
+  {
+    "id": "recipe-wac-2022-simon",
+    "sourceId": "aero-wac",
+    "kind": "brew-recipe",
+    "title": "WAC 2022 — Simon Derutter",
+    "summary": "Published competition recipe for one named coffee; grinder configuration is incomplete.",
+    "fields": {
+      "brewMethod": "aeropress",
+      "brewer": "AeroPress",
+      "position": "standard",
+      "doseG": 18,
+      "temperatureSetpointC": 90,
+      "grinderBrand": "Comandante",
+      "grinderModel": null,
+      "grindClicks": 23,
+      "zeroPoint": null,
+      "durationS": [105, 105],
+      "filter": "Aesir paper",
+      "waterBrand": "Perfect Coffee Water",
+      "waterChemistry": null,
+      "coffee": "Colombia Finca Juan Martin",
+      "varietyLabel": "Striped Red Bourbon",
+      "process": "natural",
+      "roastProfile": null,
+      "beverageYieldG": null,
+      "waterInputG": 186,
+      "waterThroughCoffeeG": 140,
+      "bypassWaterG": 46,
+      "steepS": 75,
+      "pressS": 30
+    },
+    "tags": ["AeroPress", "Comandante", "recipe", "natural", "Simon Derutter"],
+    "limitations": [
+      "Click values cannot be transferred to another grinder or axle configuration without calibration.",
+      "Competition placement is not a controlled comparison or a sensory measurement."
+    ],
+    "status": "curated",
+    "evidenceType": "published-recipe",
+    "version": 1
+  },
+  {
+    "id": "recipe-wac-2022-jennifer",
+    "sourceId": "aero-wac",
+    "kind": "brew-recipe",
+    "title": "WAC 2022 — Jennifer Rui Ping Ho",
+    "summary": "Published competition recipe for one named coffee; grinder configuration is incomplete.",
+    "fields": {
+      "brewMethod": "aeropress",
+      "brewer": "AeroPress",
+      "position": "inverted",
+      "doseG": 18,
+      "temperatureSetpointC": 84,
+      "grinderBrand": "Comandante",
+      "grinderModel": null,
+      "grindClicks": 30,
+      "zeroPoint": null,
+      "durationS": [120, 120],
+      "filter": "AeroPress Classic paper, not rinsed",
+      "waterBrand": "Perfect Coffee Water",
+      "waterChemistry": null,
+      "coffee": "Colombia Finca Juan Martin",
+      "varietyLabel": "Striped Red Bourbon",
+      "process": "natural",
+      "roastProfile": null,
+      "beverageYieldG": null,
+      "waterInputMl": 200,
+      "waterInputG": null,
+      "poursMl": [100, 100],
+      "bloomS": 30,
+      "pressStartS": 90,
+      "pressS": 30
+    },
+    "tags": [
+      "AeroPress",
+      "Comandante",
+      "recipe",
+      "natural",
+      "Jennifer Rui Ping Ho"
+    ],
+    "limitations": [
+      "Click values cannot be transferred to another grinder or axle configuration without calibration.",
+      "Competition placement is not a controlled comparison or a sensory measurement."
+    ],
+    "status": "curated",
+    "evidenceType": "published-recipe",
+    "version": 1
+  },
+  {
+    "id": "equipment-comandante-aero",
+    "sourceId": "aero-grind",
+    "kind": "equipment-guidance",
+    "title": "Comandante C40 AeroPress starting range",
+    "summary": "AeroPress lists 18–20 clicks from zero for a Comandante C40.",
+    "fields": {
+      "brewer": "AeroPress",
+      "grinderModel": "Comandante C40",
+      "grindClicksRange": [18, 20],
+      "axleConfiguration": null
+    },
+    "tags": ["AeroPress", "Comandante", "C40", "grind"],
+    "limitations": [
+      "Axle configuration and lot are unspecified; this is a starting range, not a conversion to microns."
+    ],
+    "status": "curated",
+    "evidenceType": "manufacturer-guidance",
+    "version": 1
+  },
+  {
+    "id": "sensory-cva",
+    "sourceId": "sca-cva",
+    "kind": "sensory",
+    "title": "Separate description from liking",
+    "summary": "SCA’s CVA distinguishes physical, descriptive, affective and extrinsic assessments.",
+    "fields": {
+      "assessmentTypes": ["physical", "descriptive", "affective", "extrinsic"],
+      "descriptiveStandard": "SCA 103",
+      "affectiveStandard": "SCA 104",
+      "extrinsicStandard": "SCA 105"
+    },
+    "tags": ["cupping", "sensory", "CVA", "SCA", "preference"],
+    "limitations": [
+      "Framework summary only; this seed does not reproduce standards or certify protocol compliance."
+    ],
+    "status": "curated",
+    "evidenceType": "reference",
+    "version": 1
+  },
+  {
+    "id": "water-hardness-alkalinity",
+    "sourceId": "bh-water",
+    "kind": "water",
+    "title": "Hardness and alkalinity are different",
+    "summary": "General hardness represents calcium and magnesium contributions; alkalinity describes acid-buffering capacity.",
+    "fields": {
+      "captureSeparately": ["generalHardnessMgLCaCO3", "alkalinityMgLCaCO3"]
+    },
+    "tags": ["water", "hardness", "alkalinity", "acidity"],
+    "limitations": [
+      "Do not equate water TDS with either hardness or alkalinity."
+    ],
+    "status": "curated",
+    "evidenceType": "expert-guidance",
+    "version": 1
+  },
+  {
+    "id": "discovery-kl-community-core",
+    "sourceId": "kl-community-core",
+    "kind": "source-discovery",
+    "title": "Kaffelogic community — 12 core profiles",
+    "summary": "Official forum thread located; direct fetch returned 403. Native attachments were not ingested.",
+    "fields": {},
+    "tags": ["community", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-kl-community-droast",
+    "sourceId": "kl-community-droast",
+    "kind": "source-discovery",
+    "title": "Kaffelogic community — D-Roast",
+    "summary": "Community profile discussion located; profile file and results require review.",
+    "fields": {},
+    "tags": ["community", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-reddit-first-roast",
+    "sourceId": "reddit-first-roast",
+    "kind": "source-discovery",
+    "title": "Reddit — first roast on Kaffelogic Nano 7",
+    "summary": "Search excerpt reports 190 g Sidamo, an altitude-labelled profile and level 3.0; no complete linked outcome verified.",
+    "fields": {},
+    "tags": ["community", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-reddit-ultralight",
+    "sourceId": "reddit-ultralight",
+    "kind": "source-discovery",
+    "title": "Reddit — Kaffelogic ultra-light starting profiles",
+    "summary": "Discussion about ultra-light preferences located; anecdotal material has not been promoted into recommendation evidence.",
+    "fields": {},
+    "tags": ["community", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-hb-forums",
+    "sourceId": "hb-forums",
+    "kind": "source-discovery",
+    "title": "Home-Barista forums",
+    "summary": "Roasting forum located for targeted acquisition; no individual observation imported.",
+    "fields": {},
+    "tags": ["community", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-kl-downloads",
+    "sourceId": "kl-downloads",
+    "kind": "source-discovery",
+    "title": "Kaffelogic downloads",
+    "summary": "Official download entry point located; native files and revisions remain to be acquired.",
+    "fields": {},
+    "tags": ["manufacturer", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  },
+  {
+    "id": "discovery-reddit-terms",
+    "sourceId": "reddit-terms",
+    "kind": "source-discovery",
+    "title": "Reddit Data API terms",
+    "summary": "API terms specify a separate agreement for commercial use. Bulk acquisition is pending review.",
+    "fields": {},
+    "tags": ["policy", "discovery"],
+    "limitations": [
+      "Discovery only; excluded from default retrieval and export."
+    ],
+    "status": "discovery",
+    "evidenceType": "discovery",
+    "version": 1
+  }
+]

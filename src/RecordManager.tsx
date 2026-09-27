@@ -9,6 +9,8 @@ type Entry = {
   detail?: string;
 };
 const labels: Record<string, string> = {
+  brew: "Brew",
+  equipment: "Equipment",
   bean: "Green coffee",
   profile: "Profile",
   version: "Profile revision",

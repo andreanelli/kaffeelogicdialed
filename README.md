@@ -92,3 +92,16 @@ Native codec, import conversion, conflict, atomicity and rollback tests are incl
 - `docs/DEVICE.md` — confirmed device facts, evidence, and hardware investigation checklist.
 
 Dialed is an independent project. No affiliation with Kaffelogic is implied.
+
+## Knowledge strategy and public research seed
+
+The [knowledge strategy](docs/KNOWLEDGE_STRATEGY.md) defines the lot → roast → brew → tasting data contract, public-source acquisition plan and few-trial learning approach. The [public knowledge pilot](knowledge/README.md) contains 30 source references and 44 records, with validated offline retrieval and JSONL export. The application’s **Knowledge library** lets you search and filter these references and plan experiments with saved source evidence. Public references remain separate from measured Dialed outcomes. See the [integration guide](docs/KNOWLEDGE_APP.md).
+
+```sh
+node scripts/knowledge/cli.js search "Kenya SL28 washed" --kind lot
+node scripts/knowledge/cli.js eval
+```
+
+## Brew log, equipment and controlled pilots
+
+Record equipment configurations under **Equipment**, then log an extraction under **Brew log** and choose **Taste this brew**. Multiple tasters can assess the same preparation; unknown measurements and scores stay blank. **Experiments → Plan nine-batch pilot** prepares a three-lot comparison with two roast choices and one reference repeat per lot. See [Brew and tasting capture](docs/BREWING.md) for the workflow, compatibility and current limits.

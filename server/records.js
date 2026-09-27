@@ -6,6 +6,8 @@ const kinds = new Set([
   "deviceRun",
   "experiment",
   "cupping",
+  "brew",
+  "equipment",
   "file",
   "deviceProfile",
   "syncJob",
@@ -33,6 +35,9 @@ export function deleteRecord(s, kind, id) {
     if (kind === "profile")
       for (const v of s.list("version")) if (v.profileId === id) ids.add(v.id);
     const references = [
+      "brewId",
+      "brewerId",
+      "grinderId",
       "beanId",
       "profileId",
       "profileVersionId",
@@ -50,6 +55,7 @@ export function deleteRecord(s, kind, id) {
       const data = JSON.parse(row.data);
       if (
         references.some((k) => ids.has(data[k])) ||
+        (data.pilot?.lotIds || []).some((id) => ids.has(id)) ||
         (data.files || []).some((f) => ids.has(f.id)) ||
         ids.has(data.source?.fileId)
       )
@@ -120,7 +126,7 @@ export function registerRecordRoutes(app, s) {
             kind,
             name: r.name || r.taster || `Revision ${r.number}`,
             createdAt: r.createdAt,
-            detail: r.roastedAt || r.tastedAt || "",
+            detail: r.roastedAt || r.tastedAt || r.brewedAt || "",
           })),
         ),
       ...s

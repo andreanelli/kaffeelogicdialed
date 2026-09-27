@@ -35,6 +35,7 @@ export const roastSchema = z
     beanId: text,
     profileVersionId: text,
     experimentId: z.string().nullable().default(null),
+    pilotTrialId: z.string().nullable().default(null),
     roastedAt: z.string().datetime({ offset: true }),
     greenWeight: z.number().finite().positive().max(1000),
     roastedWeight: z.number().finite().positive().max(1000),
@@ -61,15 +62,28 @@ export const cuppingSchema = z.object({
   roastId: text,
   taster: text,
   tastedAt: z.string().datetime({ offset: true }),
-  score: z.number().finite().min(0).max(100),
-  aroma: z.number().min(0).max(10),
-  acidity: z.number().min(0).max(10),
-  sweetness: z.number().min(0).max(10),
-  body: z.number().min(0).max(10),
-  finish: z.number().min(0).max(10),
+  brewId: z.string().nullable().default(null),
+  protocolVersion: z
+    .literal("dialed-personal-v1")
+    .default("dialed-personal-v1"),
+  blindCode: z.string().max(100).default(""),
+  descriptors: z.string().max(2000).default(""),
+  liking: z.number().min(1).max(5).nullable().default(null),
+  targetMatch: z.number().min(1).max(5).nullable().default(null),
+  score: z.number().finite().min(0).max(100).nullable().default(null),
+  aroma: z.number().min(0).max(10).nullable().default(null),
+  acidity: z.number().min(0).max(10).nullable().default(null),
+  sweetness: z.number().min(0).max(10).nullable().default(null),
+  body: z.number().min(0).max(10).nullable().default(null),
+  finish: z.number().min(0).max(10).nullable().default(null),
   notes,
 });
 export const experimentSchema = z.object({
+  referenceIds: z
+    .array(z.string().min(1).max(200))
+    .max(20)
+    .refine((ids) => new Set(ids).size === ids.length, "Duplicate references")
+    .default([]),
   name: text,
   hypothesis: z.string().trim().min(1).max(5000),
   variable: text,

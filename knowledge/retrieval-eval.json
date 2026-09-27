@@ -1,0 +1,65 @@
+[
+  {
+    "id": "lot-kenya",
+    "query": "Kenya SL28 washed cranberry",
+    "filters": { "kind": "lot" },
+    "expected": ["lot-kenya-2025"]
+  },
+  {
+    "id": "lot-chocolate",
+    "query": "Brazil chocolate almond natural",
+    "filters": { "kind": "lot", "process": "natural" },
+    "expected": ["lot-brazil-2025"]
+  },
+  {
+    "id": "lot-honey",
+    "query": "Costa Rica honey peach",
+    "filters": { "kind": "lot", "process": "honey" },
+    "expected": ["lot-venecia-2025"]
+  },
+  {
+    "id": "v60",
+    "query": "V60 timed pours",
+    "filters": { "kind": "brew-recipe", "brewer": "Hario V60" },
+    "expected": ["recipe-origin-v60"]
+  },
+  {
+    "id": "espresso",
+    "query": "espresso ratio",
+    "filters": { "kind": "brew-recipe", "brewer": "La Marzocco" },
+    "expected": ["recipe-lm-espresso"]
+  },
+  {
+    "id": "bypass",
+    "query": "Simon Comandante bypass",
+    "filters": { "kind": "brew-recipe", "brewer": "AeroPress" },
+    "expected": ["recipe-wac-2022-simon"]
+  },
+  {
+    "id": "lineage",
+    "query": "Caturra mutation Bourbon",
+    "filters": { "kind": "variety" },
+    "expected": ["variety-caturra"]
+  },
+  {
+    "id": "water",
+    "query": "hardness alkalinity",
+    "filters": { "kind": "water" },
+    "expected": ["water-hardness-alkalinity"]
+  },
+  {
+    "id": "unknown-equipment",
+    "query": "espresso",
+    "filters": {
+      "kind": "brew-recipe",
+      "brewer": "Unknown grinder espresso machine"
+    },
+    "expected": []
+  },
+  {
+    "id": "unknown-topic",
+    "query": "quantum zebrafish",
+    "filters": {},
+    "expected": []
+  }
+]
