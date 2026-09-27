@@ -44,7 +44,19 @@ export type Roast = Base & {
   inventoryConsumed?: boolean;
   source?: { kind: string; timingNote?: string };
 };
+export type TastingVote = {
+  taster: string;
+  score: number | null;
+  aroma: number | null;
+  acidity: number | null;
+  sweetness: number | null;
+  body: number | null;
+  finish: number | null;
+  liking: number | null;
+  targetMatch: number | null;
+};
 export type Cupping = Base & {
+  votes?: TastingVote[];
   brewId?: string | null;
   protocolVersion?: string;
   descriptors?: string;

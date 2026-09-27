@@ -51,3 +51,13 @@ The automated suite covers local and cloud creation, unknown values, chronology,
 Browser checks used a separate temporary database: created equipment and a brew, saved a linked tasting with blank scores, created the nine-slot pilot, and verified the trial roast form preselects the correct lot/experiment/slot. No real notebook data or physical roast results were created during verification.
 
 Final checks: 52 repository tests passed; production TypeScript/Vite build passed; targeted formatting and diff whitespace checks passed. Browser verification also confirmed that new roast measurements start blank. The temporary preview server was stopped after verification.
+
+## Multiple tasters in one cupping
+
+In **Cupping table → Record a tasting**, use **Add taster** to add a named voter (up to 20). Each grade gets a separate input for each person and a live average. Removing a taster removes only that person's unsaved votes. Names must be unique within the cupping.
+
+Save creates one cupping containing the individual `votes` and server-calculated averages for overall score, aroma, acidity, sweetness, body, finish, personal liking and target match. Blank scores are excluded separately for each grade; zero is included where allowed. All-blank grades stay unknown. Averages are rounded to two decimal places. Overall score remains independently assessed, not calculated from the other attributes. Brew preparation, time, descriptors and notes are shared by the group.
+
+Expand **view individual votes** on the saved cupping to see each person's numbers alongside the averages. Existing single-taster records and API payloads remain supported. The optional `votes` array on `POST /api/cuppings` supplies named score objects; when present, the server derives summary scores and taster names from it. JSON entity storage preserves the votes locally and in Supabase without a database migration.
+
+Verified 2026-09-27: 54 tests pass, including local/cloud persistence, invalid and duplicate voters, blank scores and zero handling. Local and cloud builds pass. Browser checks on an isolated in-memory notebook covered adding/removing tasters, live averages, saving, viewing individual scores, and desktop/mobile layouts. No production notebook records were changed.

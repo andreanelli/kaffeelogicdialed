@@ -58,16 +58,7 @@ export const roastSchema = z
     (r) => !r.points || r.points.at(-1).time <= r.duration,
     "Curve cannot extend beyond roast duration",
   );
-export const cuppingSchema = z.object({
-  roastId: text,
-  taster: text,
-  tastedAt: z.string().datetime({ offset: true }),
-  brewId: z.string().nullable().default(null),
-  protocolVersion: z
-    .literal("dialed-personal-v1")
-    .default("dialed-personal-v1"),
-  blindCode: z.string().max(100).default(""),
-  descriptors: z.string().max(2000).default(""),
+const tastingScores = {
   liking: z.number().min(1).max(5).nullable().default(null),
   targetMatch: z.number().min(1).max(5).nullable().default(null),
   score: z.number().finite().min(0).max(100).nullable().default(null),
@@ -76,8 +67,61 @@ export const cuppingSchema = z.object({
   sweetness: z.number().min(0).max(10).nullable().default(null),
   body: z.number().min(0).max(10).nullable().default(null),
   finish: z.number().min(0).max(10).nullable().default(null),
-  notes,
-});
+};
+export const tastingVoteSchema = z.object({ taster: text, ...tastingScores });
+export const cuppingSchema = z
+  .object({
+    roastId: text,
+    taster: z.string().trim().max(200).default(""),
+    tastedAt: z.string().datetime({ offset: true }),
+    brewId: z.string().nullable().default(null),
+    protocolVersion: z
+      .literal("dialed-personal-v1")
+      .default("dialed-personal-v1"),
+    blindCode: z.string().max(100).default(""),
+    descriptors: z.string().max(2000).default(""),
+    ...tastingScores,
+    votes: z.array(tastingVoteSchema).min(1).max(20).optional(),
+    notes,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.votes && !data.taster)
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["taster"],
+        message: "Enter a taster",
+      });
+    if (data.votes) {
+      const names = data.votes.map((v) => v.taster.toLocaleLowerCase());
+      if (new Set(names).size !== names.length)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["votes"],
+          message: "Each taster needs a unique name",
+        });
+    }
+  })
+  .transform((data) => {
+    if (!data.votes) return data;
+    const averages = Object.fromEntries(
+      Object.keys(tastingScores).map((key) => {
+        const values = data.votes.map((v) => v[key]).filter((v) => v !== null);
+        return [
+          key,
+          values.length
+            ? Math.round(
+                (values.reduce((sum, v) => sum + v, 0) / values.length) * 100,
+              ) / 100
+            : null,
+        ];
+      }),
+    );
+    return {
+      ...data,
+      ...averages,
+      taster: data.votes.map((v) => v.taster).join(", "),
+    };
+  });
 export const experimentSchema = z.object({
   referenceIds: z
     .array(z.string().min(1).max(200))

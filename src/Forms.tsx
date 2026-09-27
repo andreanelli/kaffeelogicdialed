@@ -1,3 +1,4 @@
+import { MultiTastingFields, tastingMetrics } from "./MultiTasting";
 import { KnowledgeEvidence } from "./Knowledge";
 import { BrewingFields, EquipmentFields, PilotFields } from "./BrewingFields";
 import { useEffect, useRef, useState } from "react";
@@ -233,19 +234,16 @@ export function EditorDialog({
       if (editor.type === "cupping")
         await api("/cuppings", {
           roastId: s("roastId"),
-          taster: s("taster"),
+          votes: f.getAll("voteId").map((id) => ({
+            taster: s(`taster_${id}`),
+            ...Object.fromEntries(
+              tastingMetrics.map(({ key }) => [key, nullable(`${key}_${id}`)]),
+            ),
+          })),
           tastedAt: new Date(s("tastedAt")).toISOString(),
           brewId: s("brewId") || null,
           blindCode: s("blindCode"),
           descriptors: s("descriptors"),
-          liking: nullable("liking"),
-          targetMatch: nullable("targetMatch"),
-          score: nullable("score"),
-          aroma: nullable("aroma"),
-          acidity: nullable("acidity"),
-          sweetness: nullable("sweetness"),
-          body: nullable("body"),
-          finish: nullable("finish"),
           notes: s("notes"),
         });
       await onSaved();
@@ -792,28 +790,6 @@ export function EditorDialog({
                   placeholder="e.g. peach, cocoa, floral"
                 />
               </Field>
-              {["liking", "targetMatch"].map((k) => (
-                <Field
-                  key={k}
-                  label={
-                    k === "liking"
-                      ? "Personal liking / 5"
-                      : "Match to intended cup / 5"
-                  }
-                >
-                  <input
-                    name={k}
-                    type="number"
-                    min="1"
-                    max="5"
-                    step=".5"
-                    placeholder="Not assessed"
-                  />
-                </Field>
-              ))}
-              <Field label="Taster">
-                <input name="taster" required placeholder="Your name" />
-              </Field>
               <Field label="Tasted at">
                 <input
                   name="tastedAt"
@@ -822,31 +798,7 @@ export function EditorDialog({
                   defaultValue={localDate()}
                 />
               </Field>
-              <Field label="Overall score / 100">
-                <input
-                  name="score"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step=".25"
-                  placeholder="Not assessed"
-                />
-              </Field>
-              {["aroma", "acidity", "sweetness", "body", "finish"].map((k) => (
-                <Field
-                  key={k}
-                  label={`${k[0].toUpperCase() + k.slice(1)} / 10`}
-                >
-                  <input
-                    name={k}
-                    type="number"
-                    min="0"
-                    max="10"
-                    step=".25"
-                    placeholder="Not assessed"
-                  />
-                </Field>
-              ))}
+              <MultiTastingFields />
               <Field label="In the cup" wide>
                 <textarea
                   name="notes"

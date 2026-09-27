@@ -369,6 +369,22 @@ test("cloud persists brew snapshots, pilot plans and linked tasting assessments"
   });
   assert.equal(cup.status, 201);
   assert.equal(cup.data.score, null);
+  const group = await request("/cuppings", {
+    roastId: roast.id,
+    brewId: brew.id,
+    tastedAt: "2026-09-03T00:15:00Z",
+    votes: [
+      { taster: "A", score: 80, body: 0 },
+      { taster: "B", score: 90, body: 8 },
+    ],
+  });
+  assert.equal(group.status, 201);
+  assert.equal(group.data.score, 85);
+  assert.equal(group.data.body, 4);
+  const savedGroup = (await request("/state")).data.cuppings.find(
+    (c) => c.id === group.data.id,
+  );
+  assert.deepEqual(savedGroup.votes, group.data.votes);
   const before = commits;
   assert.equal(
     (

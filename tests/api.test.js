@@ -945,3 +945,50 @@ test("knowledge search separates leads and persists trusted experiment evidence"
   );
   assert.deepEqual(removed.data.evidence, []);
 });
+
+test("multi-tasting preserves individual votes and computes authoritative averages", async (t) => {
+  const { request, s } = await setup(t);
+  const p = await prerequisites(request);
+  const r = await request("/roasts", roast(p.bean, p.version));
+  const base = { roastId: r.data.id, tastedAt: new Date().toISOString() };
+  const result = await request("/cuppings", {
+    ...base,
+    score: 100,
+    taster: "Untrusted summary",
+    votes: [
+      { taster: " Andrea ", score: 80, aroma: 0, acidity: 7, liking: 3 },
+      { taster: "Ziga", score: 90, aroma: 8, liking: 5 },
+      { taster: "Guest", aroma: null, acidity: 8 },
+    ],
+  });
+  assert.equal(result.status, 201);
+  assert.equal(result.data.taster, "Andrea, Ziga, Guest");
+  assert.equal(result.data.score, 85);
+  assert.equal(result.data.aroma, 4);
+  assert.equal(result.data.acidity, 7.5);
+  assert.equal(result.data.liking, 4);
+  assert.equal(result.data.finish, null);
+  assert.equal(result.data.votes[0].score, 80);
+  assert.equal(result.data.votes[2].score, null);
+  const state = (await request("/state")).data;
+  assert.deepEqual(state.cuppings[0].votes, result.data.votes);
+  assert.deepEqual(s.get(result.data.id, "cupping").votes, result.data.votes);
+  for (const votes of [
+    [],
+    [{ taster: "" }],
+    [{ taster: "A", score: 101 }],
+    [{ taster: "A", aroma: -1 }],
+    [{ taster: "A" }, { taster: " a " }],
+    Array.from({ length: 21 }, (_, i) => ({ taster: String(i) })),
+  ]) {
+    assert.equal((await request("/cuppings", { ...base, votes })).status, 400);
+  }
+  assert.equal((await request("/state")).data.cuppings.length, 1);
+  const legacy = await request("/cuppings", {
+    ...base,
+    taster: "Solo",
+    score: 82,
+  });
+  assert.equal(legacy.status, 201);
+  assert.equal(legacy.data.score, 82);
+});

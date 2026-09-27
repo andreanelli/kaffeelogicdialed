@@ -1,3 +1,4 @@
+import { TastingVotes } from "./MultiTasting";
 import { KnowledgePage, KnowledgeEvidence } from "./Knowledge";
 import {
   BrewingPage,
@@ -1203,6 +1204,7 @@ export default function App() {
                           </div>
                           <p>{c.notes || "No tasting notes recorded."}</p>
                           <TastingContext cup={c} state={state} />
+                          <TastingVotes cup={c} />
                           <div className="taste-bars">
                             {(
                               [

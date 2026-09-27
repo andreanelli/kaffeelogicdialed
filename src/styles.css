@@ -3014,3 +3014,138 @@ main > .page-heading {
 .knowledge-evidence {
   margin: 16px 0;
 }
+
+/* A shared tasting sheet, with each person's vote kept beside its average. */
+.multi-tasting {
+  min-width: 0;
+}
+.voter-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0 20px;
+}
+.voter-heading h3 {
+  margin: 6px 0 0;
+}
+.voter-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.voter-name {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 1 1 180px;
+}
+.voter-name label {
+  flex: 1;
+  min-width: 0;
+}
+.voter-name label > span,
+.vote-inputs label > span {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+.voter-name .icon-button {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+.vote-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.vote-metric {
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line, #dedfd5);
+  border-radius: 10px;
+  background: #fafbf7;
+}
+.vote-metric legend {
+  padding: 0 7px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.vote-metric legend span {
+  font-weight: 400;
+  color: #737c6b;
+}
+.vote-average {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.vote-average > span {
+  font-size: 12px;
+  color: #65705c;
+}
+.vote-average output {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  color: #34432e;
+}
+.vote-average small {
+  margin-left: auto;
+  color: #65705c;
+  font-size: 11px;
+}
+.vote-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 10px;
+}
+.vote-inputs input {
+  padding: 10px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.tasting-votes {
+  margin: 18px 0;
+  font-size: 13px;
+}
+.tasting-votes summary {
+  cursor: pointer;
+  color: #46543c;
+}
+.vote-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+.tasting-votes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.tasting-votes caption {
+  text-align: left;
+  font-size: 11px;
+  padding-bottom: 10px;
+  color: #65705c;
+}
+.tasting-votes td,
+.tasting-votes th {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #dedfd5;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .vote-metrics {
+    grid-template-columns: 1fr;
+  }
+  .voter-heading {
+    align-items: flex-start;
+  }
+  .voter-heading .button {
+    padding: 10px;
+  }
+}
